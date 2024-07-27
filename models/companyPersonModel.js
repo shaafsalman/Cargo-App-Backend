@@ -1,6 +1,6 @@
 const sql = require('mssql');
 const bcrypt = require('bcrypt');
-
+const AccountEmailSender = require('./../Utility/AccountEmailSender');
 const saltRounds = parseInt(process.env.SALT) || 10;
 
 
@@ -15,8 +15,9 @@ class CompanyPersonModel {
             const pool = await this.db;
             const request = pool.request();
             const query = `
-                SELECT personid, name, email, companyname, Deactive AS status
-                FROM companyPerson
+                SELECT cp.personid, cp.name, cp.email, cp.Deactive AS status, c.companyID, c.Name AS companyName
+                FROM companyPerson cp
+                JOIN company c ON cp.companyID = c.CompanyID
             `;
             const result = await request.query(query);
             return result.recordset;
@@ -25,9 +26,126 @@ class CompanyPersonModel {
             throw new Error('Error fetching company persons: ' + err.message);
         }
     }
+    
 
+ 
+    async createCompanyPerson(companyPersonData) {
+        const {
+          name,
+          email,
+          password,
+          created_at,
+          RealPassword,
+          updated_at,
+          password_reset_token,
+          remember_token,
+          email_verified_at,
+          companyname,
+          companyid,
+          Deactive 
+        } = companyPersonData;
+      
+        // console.log('Received data in companyPerson Controller:', companyPersonData);
+      
+        try {
+          const pool = await this.db;
+          const request = pool.request();
+
+          request.input('email', sql.NVarChar, email);
+            const checkEmailQuery = 'SELECT COUNT(*) as count FROM companyPerson WHERE email = @email';
+            const checkEmailResult = await request.query(checkEmailQuery);
+    
+            if (checkEmailResult.recordset[0].count > 0) {
+                throw new Error('Error creating CompanyPerson: Email already exists');
+            }
+      
+          // Input parameters for the SQL query
+          request.input('name', sql.NVarChar, name);
+          request.input('password', sql.NVarChar, password);
+          request.input('created_at', sql.DateTime, created_at || new Date());
+          request.input('updated_at', sql.DateTime, updated_at || new Date());
+          request.input('password_reset_token', sql.NVarChar, password_reset_token);
+          request.input('remember_token', sql.NVarChar, remember_token);
+          request.input('email_verified_at', sql.DateTime, email_verified_at || new Date());
+          request.input('companyid', sql.BigInt, companyid);
+          request.input('Deactive', sql.Bit, Deactive);
+
+      
+          const query = `
+            INSERT INTO companyPerson (name, email, password, created_at, updated_at, password_reset_token, remember_token, email_verified_at, companyid, Deactive)
+            OUTPUT INSERTED.PersonID
+            VALUES (@name, @email, @password, @created_at, @updated_at, @password_reset_token, @remember_token, @email_verified_at, @companyid, @Deactive)
+          `;
+      
+          const result = await request.query(query);
+      
+          if (result.recordset.length > 0) {
+            AccountEmailSender(email, name, RealPassword, "User");
+            return result.recordset[0];
+          } else {
+            throw new Error('Error creating company person: No records inserted');
+          }
+        } catch (err) {
+          console.error('Error creating company person:', err.message);
+          throw new Error(err.message);
+        }
+      }
+      
+
+    async updateCompanyPerson(personId, companyPersonData) {
+        // console.log("entered in model:");
+        // console.log(companyPersonData);
+        const {name, email, password,status, companyid, companyname } = companyPersonData;
+        try {
+            let temp;
+            if(status==='Active'||temp==='active'){
+                temp=1;
+                // console.log("gg");
+            }
+            else{
+                temp=0;
+            }
+            // console.log(password);
+            const pool = await this.db;
+            const request = pool.request();
+
+            request.input('personId', sql.Int, personId);
+            request.input('email', sql.NVarChar, email);
+            const checkEmailQuery = 'SELECT COUNT(*) as count FROM companyPerson WHERE email = @email AND personId != @personId';
+            const checkEmailResult = await request.query(checkEmailQuery);
+    
+            if (checkEmailResult.recordset[0].count > 0) {
+                throw new Error('Error updating companyPerson: Email already exists');
+            }
+
+            // request.input('personId', sql.Int, personId);
+            request.input('name', sql.NVarChar, name);
+            // request.input('email', sql.NVarChar, email);
+            request.input('password', sql.NVarChar, password);
+            request.input('updated_at', sql.DateTime, new Date());
+            request.input('companyID', sql.BigInt, companyid);
+            request.input('Deactive', sql.Bit, temp);
+
+            const query = `
+                UPDATE companyPerson
+                SET 
+                    name = @name,
+                    email = @email,
+                    password = @password,
+                    updated_at = @updated_at,
+                    companyID = @companyID,
+                    Deactive = @Deactive
+                    
+                WHERE PersonID = @personId
+            `;
+            await request.query(query);
+            return true;
+        } catch (err) {
+            throw new Error('Error updating company person: ' + err.message);
+        }
+    }
     async getCompanyDetails(companyPersonId) {
-        console.log('Getting company details:', companyPersonId);
+        // console.log('Getting company details:', companyPersonId);
         try {
             const pool = await this.db;
             const request = pool.request();
@@ -36,7 +154,7 @@ class CompanyPersonModel {
             request.input('companyPersonId', companyPersonId);
             
             const query = `
-                SELECT c.name as companyName,c.Email AS companyEmail, c.Telephone AS phoneNumber, c.Address AS address
+                SELECT c.name as companyName,c.Email AS companyEmail, c.Telephone AS phoneNumber, c.Address AS address, c.WhatsApp AS whatsapp, c.city AS city, c.country AS country
                 FROM companyPerson cp
                 INNER JOIN company c ON cp.CompanyID = c.CompanyID
                 WHERE cp.PersonID = @companyPersonId
@@ -45,9 +163,9 @@ class CompanyPersonModel {
             const result = await request.query(query);
             if (result.recordset.length > 0) 
                 {
-                    console.log(result.recordset[0])
-                const { companyName , companyEmail, phoneNumber, address } = result.recordset[0];
-                return { companyName,companyEmail, phoneNumber, address };
+                    // console.log(result.recordset[0])
+                const { companyName , companyEmail, phoneNumber,whatsapp,city,country, address } = result.recordset[0];
+                return { companyName,companyEmail, phoneNumber,whatsapp,city,country, address };
             } else {
                 return null;
             }
@@ -71,113 +189,16 @@ class CompanyPersonModel {
             throw new Error('Error fetching company person by ID: ' + err.message);
         }
     }
-    async createCompanyPerson(companyPersonData) {
-        const {
-          name,
-          email,
-          password,
-          created_at,
-          updated_at,
-          password_reset_token,
-          remember_token,
-          email_verified_at,
-          companyname,
-          companyid,
-          Deactive 
-        } = companyPersonData;
-      
-        console.log('Received daata:', companyPersonData);
-      
-        try {
-          const pool = await this.db;
-          const request = pool.request();
-      
-          // Input parameters for the SQL query
-          request.input('name', sql.NVarChar, name);
-          request.input('email', sql.NVarChar, email);
-          request.input('password', sql.NVarChar, password);
-          request.input('created_at', sql.DateTime, created_at || new Date());
-          request.input('updated_at', sql.DateTime, updated_at || new Date());
-          request.input('password_reset_token', sql.NVarChar, password_reset_token);
-          request.input('remember_token', sql.NVarChar, remember_token);
-          request.input('email_verified_at', sql.DateTime, email_verified_at || new Date());
-          request.input('companyid', sql.BigInt, companyid);
-          request.input('companyname', sql.NVarChar, companyname);
-          request.input('Deactive', sql.Bit, Deactive);
-
-      
-          const query = `
-            INSERT INTO companyPerson (name, email, password, created_at, updated_at, password_reset_token, remember_token, email_verified_at, companyid, companyname, Deactive)
-            OUTPUT INSERTED.PersonID
-            VALUES (@name, @email, @password, @created_at, @updated_at, @password_reset_token, @remember_token, @email_verified_at, @companyid, @companyname, @Deactive)
-          `;
-      
-          const result = await request.query(query);
-      
-          if (result.recordset.length > 0) {
-            return result.recordset[0];
-          } else {
-            throw new Error('Error creating company person: No records inserted');
-          }
-        } catch (err) {
-          console.error('Error creating company person:', err.message);
-          throw new Error('Error creating company person: ' + err.message);
-        }
-      }
-      
-
-    async updateCompanyPerson(personId, companyPersonData) {
-        console.log("entered:");
-        console.log(companyPersonData);
-        const {name, email, password,status, companyid, companyname } = companyPersonData;
-        try {
-            let temp;
-            if(status==='active'||temp==='Active'){
-                temp=1;
-            }
-            else{
-                temp=0;
-            }
-            console.log(password);
-            const pool = await this.db;
-            const request = pool.request();
-            request.input('personId', sql.Int, personId);
-            request.input('name', sql.NVarChar, name);
-            request.input('email', sql.NVarChar, email);
-            request.input('password', sql.NVarChar, password);
-            request.input('updated_at', sql.DateTime, new Date());
-            request.input('companyID', sql.BigInt, companyid);
-            request.input('companyname', sql.NVarChar, companyname);
-            request.input('Deactive', sql.Bit, temp);
-
-            const query = `
-                UPDATE companyPerson
-                SET 
-                    name = @name,
-                    email = @email,
-                    password = @password,
-                    updated_at = @updated_at,
-                    companyID = @companyID,
-                    Deactive = @Deactive,
-                    companyname=@companyname
-                WHERE PersonID = @personId
-            `;
-            await request.query(query);
-            return true;
-        } catch (err) {
-            throw new Error('Error updating company person: ' + err.message);
-        }
-    }
 
     async deleteCompanyPerson(personId) {
-        console.log('Deleting company person from model ' + personId);
+        // console.log('Deleting company person from model ' + personId);
         try {
             const pool = await this.db;
             const request = pool.request();
             request.input('personId', sql.Int, personId);
             const query = 'DELETE FROM companyPerson WHERE PersonID = @personId';
             const result = await request.query(query);
-            console.log(result);
+            // console.log(result);
             return result.rowsAffected > 0;
         } catch (err) {
             throw new Error('Error deleting company person: ' + err.message);
@@ -211,22 +232,39 @@ class CompanyPersonModel {
     }
 
     async findByEmail(email) {
-        console.log('inside findByEmail', email);
+        // console.log('inside findByEmail', email);
         try {
             const pool = await this.db;
             const request = pool.request();
             request.input('email', sql.NVarChar, email);
             const query = 'SELECT * FROM companyPerson WHERE email = @email';
             const result = await request.query(query);
+    
+            console.log('Query Result:', result);
+    
+            if (result.recordset.length === 0) {
+                throw new Error('No company person found with the provided email.');
+            }
+    
             return result.recordset[0];
         } 
-        catch (err) 
-        {
+        catch (err) {
+            if (err instanceof sql.RequestError) {
+                console.error('Request error:', err.message);
+            } else if (err instanceof sql.ConnectionError) {
+                console.error('Connection error:', err.message);
+            } else if (err instanceof sql.PreparedStatementError) {
+                console.error('Prepared statement error:', err.message);
+            } else {
+                console.error('Unexpected error:', err.message);
+            }
+    
             throw new Error('Error fetching company person by email: ' + err.message);
         }
     }
+    
     async  updateCustomerDetails(id, name, email, companyName) {
-        console.log('Updating customer details:', id);
+        // console.log('Updating customer details:', id);
         try {
             const pool = await this.db; 
             const request = pool.request();
@@ -246,7 +284,7 @@ class CompanyPersonModel {
             `;
     
             const result = await request.query(query);
-            console.log(result);
+            // console.log(result);
             return result.rowsAffected[0] > 0;
         } catch (err) {
             console.error('Error updating customer details:', err.message);
@@ -255,7 +293,7 @@ class CompanyPersonModel {
     }
     
     async getDetails(id) {
-        console.log('Getting details:', id);
+        // console.log('Getting details:', id);
         try {
             const pool = await this.db; 
             const request = pool.request();
@@ -279,7 +317,7 @@ class CompanyPersonModel {
             `;
     
             const result = await request.query(query);
-            console.log(result);
+            // console.log(result);
             if (result.recordset.length === 0) {
                 throw new Error('CompanyPerson not found');
             }
@@ -295,7 +333,7 @@ class CompanyPersonModel {
     
     }
     async changePassword(id, oldPassword, newPassword) {
-        console.log('Changing password for:', id);
+        // console.log('Changing password for:', id);
         try {
             const pool = await this.db;
             const request = pool.request();
@@ -342,7 +380,7 @@ class CompanyPersonModel {
             request.input('NewPassword', sql.NVarChar, hashedNewPassword);
             const updateResult = await request.query(updatePasswordQuery);
 
-            console.log(updateResult);
+            // console.log(updateResult);
             return { success: updateResult.rowsAffected[0] > 0, message: 'Password changed successfully' };
         } catch (err) {
             console.error('Error changing password:', err.message);

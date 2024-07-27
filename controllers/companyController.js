@@ -11,11 +11,11 @@ connectToDatabase().then(pool => {
 
 exports.getAllCompanies = async (req, res) => {
     try {
-        console.log("reached here in controller");
-        console.log("req at controller",req.body);
+        // console.log("reached here in controller");
+        // console.log("req at controller",req.body);
         const companies = await companyModel.getAllCompanies();
 
-        console.log("companies at controller",companies); 
+        // console.log("companies at controller",companies); 
 
         if (!companies || companies.length === 0) {
             return res.status(404).json({ error: 'No companies found' });
@@ -34,10 +34,31 @@ exports.getAllCompanies = async (req, res) => {
         res.status(500).json({ error: 'Error fetching companies: ' + err.message });
     }
 };
+exports.getPaymentTerms = async (companyPersonId) => {
+    try {
+      const paymentTerms = await companyModel.getPaymentTerms(companyPersonId);
+    //   console.log(paymentTerms);
+      if (!paymentTerms) {
+        throw new Error('Payment terms not found');
+        return {
+            success: false,
+            message: 'Payment terms not retrieved ',
+          };
+      }
+      return {
+        success: true,
+        message: 'Payment terms retrieved successfully',
+        paymentTerms: paymentTerms
+      };
+    } catch (error) {
+      console.error('Error fetching payment terms:', error.message);
+      throw error; 
+    }
+  };
 
 exports.getSomeCompanies = async (req, res) => {
     try {
-        console.log("reached here");
+        // console.log("reached here");
         const companies = await companyModel.getSomeCompanies();
         
         if (!companies || companies.length === 0) {
@@ -61,7 +82,7 @@ exports.getSomeCompanies = async (req, res) => {
 exports.createCompany = async (companyData) => {
     try {
 
-      console.log('In company controller:', companyData);
+    //   console.log('In company controller:', companyData);
   
       const result = await companyModel.createCompany(companyData);
   
@@ -70,15 +91,15 @@ exports.createCompany = async (companyData) => {
       } else {
         throw new Error('Failed to create company');
       }
-    } catch (err) {
-      console.error('Error creating company:', err.message);
-      throw new Error('Failed to create company: ' + err.message);
+    }  catch (err) {
+        console.error('Error in create Company function:', err.message);
+        throw new Error(err.message);
     }
   };
 
 exports.deleteCompany = async (id) => {
     try {
-        console.log(`Deleting company from controller: ${id}`);
+        // console.log(`Deleting company from controller: ${id}`);
         const result = await companyModel.deleteCompany(id);
         if (result) 
         {
@@ -110,8 +131,8 @@ exports.getCompanyById = async (req, res) => {
 
 exports.updateCompany = async (companyId, newData) => {
     try {
-        console.log("in controller");
-        console.log(newData);
+        // console.log("in controller");
+        // console.log(newData);
         // Destructure the newData object to get the updated fields
         const { name, address, telephone,email,city,country,whatsapp,status,postalcode,paymentterms } = newData;
 
@@ -139,13 +160,13 @@ exports.updateCompany = async (companyId, newData) => {
         return result; // Return the result of the update operation (true/false or any relevant data)
     } catch (err) {
         console.error('Error in updateCompany function:', err.message);
-        throw err; // Throw the error to be caught by the calling function or middleware
+        throw new Error(err.message);
     }
 };
 
 exports.activateCompany = async (companyId) => {
     try {
-        console.log(`activating company from controller: ${companyId}`);
+        // console.log(`activating company from controller: ${companyId}`);
         const result = await companyModel.activateCompany(companyId);
         return result;
       } 
@@ -158,7 +179,7 @@ exports.activateCompany = async (companyId) => {
 };
 exports.deactivateCompany = async (companyId) => {
     try {
-        console.log(`deactivating company from controller: ${companyId}`);
+        // console.log(`deactivating company from controller: ${companyId}`);
         const result = await companyModel.deactivateCompany(companyId);
         return result;
       } 

@@ -1,8 +1,7 @@
 const sql = require('mssql');
 const bcrypt = require('bcrypt');
-
 const saltRounds = parseInt(process.env.SALT) || 10;
-
+const AccountEmailSender = require('../Utility/AccountEmailSender'); 
 
 class AdminModel {
     constructor(db) {
@@ -39,12 +38,22 @@ class AdminModel {
     }
 
     async createAdmin(adminData) {
-        const { name, email, password, created_at, updated_at, password_reset_token, GroupID, CustomerID, remember_token, email_verified_at, activation_status } = adminData;
+        const { name, email, password,RealPassword, created_at, updated_at, password_reset_token, GroupID, CustomerID, remember_token, email_verified_at, activation_status } = adminData;
         try {
             const pool = await this.db;
             const request = pool.request();
-            request.input('name', sql.NVarChar, name);
+    
+            // Check if email already exists
             request.input('email', sql.NVarChar, email);
+            const checkEmailQuery = 'SELECT COUNT(*) as count FROM admin WHERE email = @email';
+            const checkEmailResult = await request.query(checkEmailQuery);
+    
+            if (checkEmailResult.recordset[0].count > 0) {
+                throw new Error('Error creating admin: Email already exists');
+            }
+    
+            // Proceed with creating admin
+            request.input('name', sql.NVarChar, name);
             request.input('password', sql.NVarChar, password);
             request.input('created_at', sql.DateTime, created_at);
             request.input('updated_at', sql.DateTime, updated_at);
@@ -54,24 +63,25 @@ class AdminModel {
             request.input('remember_token', sql.NVarChar, remember_token);
             request.input('email_verified_at', sql.DateTime, email_verified_at);
             request.input('activation_status', sql.Int, activation_status);
-
+    
             const query = `
                 INSERT INTO admin (name, email, password, created_at, updated_at, password_reset_token, GroupID, CustomerID, remember_token, email_verified_at, activation_status)
                 OUTPUT INSERTED.AdminID
                 VALUES (@name, @email, @password, @created_at, @updated_at, @password_reset_token, @GroupID, @CustomerID, @remember_token, @email_verified_at, @activation_status)
             `;
             const result = await request.query(query);
+    
             if (result.recordset.length > 0) {
+                 AccountEmailSender(email, name, RealPassword, "Admin");
                 return result.recordset[0];
             } else {
                 throw new Error('Error creating admin: No records inserted');
             }
         } catch (err) {
             console.error('Error creating admin:', err.message);
-            throw new Error('Error creating admin: ' + err.message);
+            throw new Error(err.message);
         }
     }
-
     async updateAdmin(adminId, updatedAdminData) {
         const { name, email, status } = updatedAdminData;
         try {
@@ -84,11 +94,21 @@ class AdminModel {
             else{
                 temp=0;
             }
+
+            // Check if email already exists
+            request.input('adminId', sql.Int, adminId);
+            request.input('email', sql.NVarChar, email);
+            const checkEmailQuery = 'SELECT COUNT(*) as count FROM admin WHERE email = @email AND AdminID != @adminId';
+            const checkEmailResult = await request.query(checkEmailQuery);
+    
+            if (checkEmailResult.recordset[0].count > 0) {
+                throw new Error('Error updating admin: Email already exists');
+            }
             
             // Add input parameters for the query
-            request.input('adminId', sql.Int, adminId);
+            // request.input('adminId', sql.Int, adminId);
             request.input('name', sql.NVarChar, name);
-            request.input('email', sql.NVarChar, email);
+            // request.input('email', sql.NVarChar, email);
             request.input('activation_status', sql.Int, temp);
             request.input('updated_at', sql.DateTime, new Date());
     
@@ -113,7 +133,7 @@ class AdminModel {
             }
         } catch (err) {
             console.error('Error updating admin:', err.message);
-            throw new Error('Error updating admin: ' + err.message);
+            throw new Error(err.message);
         }
     }
     
@@ -126,7 +146,7 @@ class AdminModel {
             request.input('adminId', sql.Int, adminId);
             const query = 'DELETE FROM admin WHERE AdminID = @adminId';
             const result = await request.query(query);
-            console.log(result);
+            // console.log(result);
             return result.rowsAffected > 0;
         } catch (err) {
             throw new Error('Error deleting admin: ' + err.message);
@@ -148,7 +168,6 @@ class AdminModel {
 
     async deactivateAdmin(adminId) {
         try {
-            console.log("wprking");
             const pool = await this.db;
             const request = pool.request();
             request.input('adminId', sql.Int, adminId);
@@ -161,7 +180,7 @@ class AdminModel {
     }
 
     async findByEmail(email) {
-        console.log('inside findByEmail', email);
+        // console.log('inside findByEmail', email);
         try {
             const pool = await this.db;
             const request = pool.request();
@@ -175,7 +194,7 @@ class AdminModel {
     }
     
     async updateAdminDetails(id, name, email) {
-        console.log('Updating admin details:', id);
+        // console.log('Updating admin details:', id);
         try {
             const pool = await this.db; 
             const request = pool.request();
@@ -191,7 +210,7 @@ class AdminModel {
             `;
     
             const result = await request.query(query);
-            console.log(result);
+            // console.log(result);
             return result.rowsAffected[0] > 0;
         } catch (err) {
             console.error('Error updating admin details:', err.message);
@@ -200,8 +219,8 @@ class AdminModel {
     }
     
     async getDetails(id) {
-        console.log(`Route: POST admin model /profile - Get all Details for id: ${id}`);
-        console.log('Getting details:', id);
+        // console.log(`Route: POST admin model /profile - Get all Details for id: ${id}`);
+        // console.log('Getting details:', id);
         try {
             const pool = await this.db; 
             const request = pool.request();
@@ -220,7 +239,7 @@ class AdminModel {
             `;
     
             const result = await request.query(query);
-            console.log(result);
+            // console.log(result);
             if (result.recordset.length === 0) {
                 throw new Error('Admin not found');
             }
@@ -235,7 +254,7 @@ class AdminModel {
     }
     
     async changePassword(id, oldPassword, newPassword) {
-        console.log('Changing password for:', id);
+        // console.log('Changing password for:', id);
         try {
             const pool = await this.db;
             const request = pool.request();
@@ -275,7 +294,7 @@ class AdminModel {
             request.input('NewPassword', sql.NVarChar, hashedNewPassword);
             const updateResult = await request.query(updatePasswordQuery);
 
-            console.log(updateResult);
+            // console.log(updateResult);
             return { success: updateResult.rowsAffected[0] > 0, message: 'Password changed successfully' };
         } catch (err) {
             console.error('Error changing password:', err.message);

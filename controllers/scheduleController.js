@@ -1,6 +1,7 @@
 const ScheduleModel = require('../models/scheduleModel');
 const { connectToDatabase } = require('../db');
-
+const moment = require('moment');
+const { formatTime } = require('../Utility/dateUtils');
 const { getDatesBetween } = require('../Utility/dateUtils');
 
 
@@ -12,30 +13,39 @@ connectToDatabase().then(pool => {
     console.error('Unable to connect to the database:', err);
 });
 
+
 exports.createSchedule = async (scheduleData) => {
     try {
-        const { FromID, ToID, flightName, validFrom, validTill, distanceKM, activeDay, AircraftID } = scheduleData;
+        const { from, to, flightName,connectionid, validFrom, validTill, AircraftID,activeDays, arrTimeHour, arrTimeMinute, depTimeHour, depTimeMinute} = scheduleData;
 
-        // Get all dates between validFrom and validTill that fall on the specified activeDay
-        const activeDays = getDatesBetween(validFrom, validTill, activeDay);
-
+        // Get all dates between validFrom and validTill that fall on the specified activeDays
+        const activeDys = getDatesBetween(validFrom, validTill, activeDays);
+        const formattedArrTime = arrTimeHour+":"+ arrTimeMinute;
+        // Format departure time to 'HH:mm:ss'
+        const formattedDepTime = depTimeHour+":"+depTimeMinute;
+        console.log(activeDys);
         // Create an array of new schedule objects for each active day
-        const schedules = activeDays.map((scheduleDate) => ({
-            date: scheduleDate,
-            FromID: FromID,
-            ToID: ToID,
-            flightName: flightName,
-            DistanceKM: distanceKM,
-            AircraftID: AircraftID,
-            activeDay: activeDay
-        }));
+        const schedules = activeDys.map((scheduleDate) => {
+            const formattedSchedule = {
+              connectionid,
+              flightName,
+              validFrom,
+              validTill,
+              AircraftID,
+              formattedArrTime,
+              formattedDepTime,
+              date: moment(scheduleDate).format('YYYY-MM-DD'),
+              activeDay: moment(scheduleDate).format('dddd'),
+            };
+          
+            return formattedSchedule;
+          });
 
-        console.log("Creating schedules in controller:", schedules);
+        // console.log("Creating schedules in controller:", schedules);
 
-        // Create each schedule using the model's createSchedule method
         const insertedIds = await Promise.all(schedules.map(schedule => scheduleModel.createSchedule(schedule)));
-        
         return insertedIds;
+
     } catch (err) {
         console.error('Error in createSchedule function:', err.message);
         throw new Error('Error creating schedule: ' + err.message);
@@ -81,36 +91,107 @@ exports.getScheduleById = async (req, res) => {
 };
 
 
-exports.updateSchedule = async (req, res) => {
-    const { id } = req.params;
-    const scheduleData = req.body;
+exports.updateSchedule = async (scheduleId, newData) => {
     try {
-        const updatedSchedule = await scheduleModel.updateSchedule(id, scheduleData);
-        res.json(updatedSchedule);
+        // Destructure the newData object to get the updated fields
+        const { connectionid,arrTimeHour, arrTimeMinute, depTimeHour, depTimeMinute,AircraftID,flightName,date } = newData;
+
+        // Validate required fields
+        // if (!name || !email || !status) {
+        //     throw new Error('Name, email, and status are required fields.');
+        // }
+
+        // Check if adminId is valid (optional step depending on your model)
+        // Example validation:
+        const formattedArrTime = arrTimeHour+":"+ arrTimeMinute;
+        // Format departure time to 'HH:mm:ss'
+        const formattedDepTime = depTimeHour+":"+depTimeMinute;
+        const existingSchedule = await scheduleModel.getScheduleById(scheduleId);
+        if (!existingSchedule) {
+            throw new Error(`Schedule with ID ${scheduleId} not found.`);
+        }
+
+        // Update only the fields that are provided in newData
+        const updatedScheduleData = {
+            connectionid,formattedArrTime,formattedDepTime,AircraftID,flightName,date,
+            updated_at: new Date() // Update the updated_at timestamp
+        };
+
+        // Call the model function to update admin details
+        const result = await scheduleModel.updateSchedule(scheduleId, updatedScheduleData);
+
+        return result; // Return the result of the update operation (true/false or any relevant data)
     } catch (err) {
         console.error('Error in updateSchedule function:', err.message);
-        res.status(500).json({ error: 'Error updating schedule: ' + err.message });
+        throw err; // Throw the error to be caught by the calling function or middleware
     }
 };
 
-exports.deleteSchedule = async (req, res) => {
-    const { id } = req.params;
+exports.deleteSchedule = async (scheduleId) => {
     try {
-        const result = await scheduleModel.deleteSchedule(id);
-        if (!result) {
-            return res.status(404).json({ error: 'Schedule not found' });
-        }
-        res.json({ message: 'Schedule deleted successfully' });
+        const result = await scheduleModel.deleteSchedule(scheduleId);
+        return result;
     } catch (err) {
-        console.error('Error in deleteSchedule function:', err.message);
-        res.status(500).json({ error: 'Error deleting schedule: ' + err.message });
+        console.error(`Error in deleteSchedule controller: ${err.message}`);
+        throw err;
     }
 };
+
+
+exports.getSchedulesByFromTo = async (req) => {
+    // console.log(req.body);
+    const { routeID } = req.query;
+    try {
+        const schedules = await scheduleModel.getSchedulesByFromTo(routeID);
+        // console.log("schedules controller: " ,schedules);
+        if (schedules.length > 0) {
+            return { success: true, schedules };
+        } else {
+            return { success: false, message: `Schedules with FromID ${fromId}, ToID ${toId}, and Date ${date} not found` };
+        }
+    } catch (err) {
+        console.error(`Error in getSchedulesByFromTo controller: ${err.message}`);
+        throw err;
+    }
+};
+exports.getSchedulesByFrom = async (req) => {
+    // console.log(req.body);
+    const { fromId } = req.query;
+    try {
+        const schedules = await scheduleModel.getSchedulesByFrom(fromId);
+        // console.log("schedules controller: " ,schedules);
+        if (schedules.length > 0) {
+            return { success: true, schedules };
+        } else {
+            return { success: false, message: `Schedules with FromID ${fromId} not found` };
+        }
+    } catch (err) {
+        console.error(`Error in getSchedulesByFrom controller: ${err.message}`);
+        throw err;
+    }
+};
+
+exports.getSchedulesByTo = async (req) => {
+    // console.log(req.body);
+    const { toId } = req.query;
+    try {
+        const schedules = await scheduleModel.getSchedulesByTo( toId);
+        // console.log("schedules controller: " ,schedules);
+        if (schedules.length > 0) {
+            return { success: true, schedules };
+        } else {
+            return { success: false, message: `Schedules with  ToID ${toId} not found` };
+        }
+    } catch (err) {
+        console.error(`Error in getSchedulesByTo controller: ${err.message}`);
+        throw err;
+    }
+};
+
 
 
 exports.getRegions = async () => {
     try {
-        console.log("Route: GET / - Fetch all regions");
 
         // Ensure ScheduleModel is initialized
         if (!scheduleModelInstance) {

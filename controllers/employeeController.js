@@ -39,21 +39,15 @@ exports.getAllEmployees = async (req, res) => {
 exports.createEmployee = async (employeeData) => {
     try {
         
-        console.log('Received employee data:', employeeData);
+        // console.log('Received employee data:', employeeData);
 
         const { name, email, RegionID,region, password, status,permissions } = employeeData;
 
-        // if (!name || !email || !password || !status) {
-        //     return false;
-        // }
-
-        // const hashedPassword = await bcrypt.hash(password, saltRounds);
         const newEmployeeData = {
             name,
             email,
             RegionID,
             password,
-            region,
             permissions,
             created_at: new Date(),
             updated_at: new Date(),
@@ -65,33 +59,35 @@ exports.createEmployee = async (employeeData) => {
             status
         };
 
-        console.log('New employee data:', newEmployeeData);
+        // console.log('New employee data:', newEmployeeData);
 
         const result1 = await employeeModel.createEmployee(newEmployeeData);
         const result2 = await employeeModel.createEmployeePermission(result1,newEmployeeData);
         return result1;
-    } catch (err) {
+    }
+     catch (err) 
+    {
         console.error('Error in createEmployee function:', err.message);
-        throw err;
+        throw new Error(err.message);
     }
 };
 exports.updateEmployee = async (employeeId, newData) => {
     try {
-        console.log("in controller");
-        console.log(newData);
+        // console.log("in controller");
+        // console.log(newData);
         // Destructure the newData object to get the updated fields
         const { name, email, RegionID, password, status, region, permissions } = newData;
 
-        console.log(newData);
+        // console.log(newData);
 
-        // Validate required fields
 
         const existingEmployee = await employeeModel.getEmployeeById(employeeId);
         if (!existingEmployee) {
             throw new Error(`Employee with ID ${employeeId} not found.`);
         }
+         
+        
 
-        // Update only the fields that are provided in newData
         const updatedEmployeeData = {
             name,
             email,
@@ -100,16 +96,18 @@ exports.updateEmployee = async (employeeId, newData) => {
             status,
             region, 
             permissions,
-            updated_at: new Date() // Update the updated_at timestamp
+            updated_at: new Date() 
         };
 
-        // Call the model function to update admin details
         const result = await employeeModel.updateEmployee(employeeId, updatedEmployeeData);
         const result2 = await employeeModel.updateEmployeePermission(employeeId,updatedEmployeeData);
-        return result; // Return the result of the update operation (true/false or any relevant data)
-    } catch (err) {
+        return result;
+
+    } 
+    catch (err) 
+    {
         console.error('Error in updateEmployee function:', err.message);
-        throw err; // Throw the error to be caught by the calling function or middleware
+        throw new Error(err.message);
     }
 };
 exports.deleteEmployee = async (employeeId) => {

@@ -36,8 +36,9 @@ router.post('/add', async (req, res, next) => {
         const newCompanyPerson = await companyPersonController.createCompanyPerson(companyPersonData);
         res.status(201).json(newCompanyPerson);
     } catch (err) {
-        console.error('Error creating company person:', err.message);
-        next(err); 
+        console.error('Error creaating CompanyPerson:', err.message);
+        res.status(400).json({ error: err.message });
+        next(err);
     }
 });
 
@@ -67,6 +68,7 @@ router.put('/:id', async (req, res, next) => {
         console.log(`Route: PUT /${id} - Update company person`);
         const updatedCompanyPerson = await companyPersonController.updateCompanyPerson(id, companyPersonData);
         res.json(updatedCompanyPerson);
+        
     } catch (err) {
         console.error(`Error updating company person with ID ${id}:`, err.message);
         next(err);

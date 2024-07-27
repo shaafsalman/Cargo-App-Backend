@@ -16,15 +16,17 @@ const bookingRoutes = require('./routes/bookingFormRoutes');
 const schedulesRoute = require('./routes/schedulesRoute');
 const regionsRoute = require('./routes/regionsRoute');
 const aircraftRoute = require('./routes/aircraftRouter');
-
-
+const allotmentRoute = require('./routes/allotmentRoutes');
+const employeePermissionRoute=require('./routes/employeePermission');
+const regionsConnections=require('./routes/regionConnectionRoute');
+const reportersRoute = require('./routes/reportRoutes'); 
+const statsRoute = require('./routes/statsRoute');
 // Middleware
 const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cors());
-
 
 app.use('/admin',adminRoutes);
 app.use('/employee',employeeRoutes);
@@ -36,8 +38,31 @@ app.use('/book', bookingRoutes);
 app.use('/schedule', schedulesRoute);
 app.use('/regions', regionsRoute);
 app.use('/aircraft', aircraftRoute);
+app.use('/allot', allotmentRoute);
+app.use('/employeePermission', employeePermissionRoute);
+app.use('/connections', regionsConnections);
+app.use('/reports', reportersRoute);
+app.use('/stats', statsRoute);
+
 
 const PORT = process.env.PORT || 3000;
+const HOST = '0.0.0.0'; 
+console.log(`Node.js version: ${process.version}`);
+
+
+process.on('SIGTERM', () => {
+    console.log('SIGTERM signal received: closing HTTP server');
+    server.close(() => {
+      console.log('HTTP server closed');
+    });
+  });
+  process.on('SIGINT', () => {
+    console.log('SIGINT signal received: closing HTTP server');
+    server.close(() => {
+      console.log('HTTP server closed');
+    });
+  });  
+
 
 console.log(process.version);
 
@@ -45,8 +70,8 @@ console.log(process.version);
 connectToDatabase().then(pool => {
     app.locals.db = pool;
 
-    app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
+    app.listen(PORT, HOST, () => {
+        console.log(`Server running at http://${HOST}:${PORT}/`);
     });
 }).catch(err => {
     console.error('Unable to connect to the database:', err);

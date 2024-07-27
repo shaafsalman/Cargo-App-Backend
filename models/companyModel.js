@@ -7,21 +7,52 @@ class CompanyModel {
 
     async getAllCompanies() {
         try {
-          console.log("hi from model");
             const pool = await this.db;
             const request = pool.request();
             const query = `
-                SELECT companyid, name, address, telephone, email,city,country, whatsapp,status
+                SELECT companyid, name, address, telephone, email,city,country, whatsapp, postalcode, paymentterms, status
                 FROM company
             `;
             const result = await request.query(query);
-            console.log("model data from DB",result);
+            // console.log("model data from DB",result);
             return result.recordset;
         } 
         catch (err) 
         {
             console.error('Error in getAllCompanies:', err);
             throw new Error('Error fetching companies: ' + err.message);
+        }
+    }
+    async getPaymentTerms(companyPersonId) {
+        try {
+            const pool = await this.db;
+            const request = pool.request();
+            
+            // Constructing the SQL query to fetch payment terms based on company person's ID
+            const query = `
+                SELECT c.PaymentTerms
+                FROM companyPerson cp
+                INNER JOIN company c ON cp.companyID = c.CompanyID
+                WHERE cp.PersonID = @companyPersonId
+            `;
+            
+            request.input('companyPersonId', sql.Int, companyPersonId);
+            const result = await request.query(query);
+            // console.log(result);
+
+            if (result.recordset.length === 0) {
+                throw new Error('Payment terms not found for the provided company person ID');
+            }
+
+            const paymentTermsString = result.recordset[0].PaymentTerms;
+            const paymentTermsArray = paymentTermsString.split(',').map(term => term.trim());
+            //  console.log(paymentTermsArray);
+            return paymentTermsArray;
+                
+        }
+         catch (err) {
+            console.error('Error fetching payment terms:', err.message);
+            throw new Error('Error fetching payment terms: ' + err.message);
         }
     }
 
@@ -37,9 +68,9 @@ class CompanyModel {
           const companies = result.recordset;
       
           // Log received companies and their IDs
-          console.log('Received Companies:');
+        //   console.log('Received Companies:');
           companies.forEach((company) => {
-            console.log(`Company Name: ${company.name}, ID: ${company.companyid}`);
+            // console.log(`Company Name: ${company.name}, ID: ${company.companyid}`);
           });
       
           return companies; // Return the fetched companies array
@@ -65,26 +96,35 @@ class CompanyModel {
     async createCompany(companyData) {
       const { name, address, postalcode, telephone, email,city,country, whatsapp, paymentterms, status } = companyData;
     
-      console.log("Reached model");
-      console.log(companyData);
+    //   console.log("Reached model");
+    //   console.log(companyData);
     
       let tempStatus = status === 'Active' ? 1 : 0;
       let tempPostal = parseInt(postalcode, 10);
       let tempGroup = 1;
+      const paymentTermsString = paymentterms.join(', ');
     
       try {
         const pool = await this.db;
         const request = pool.request();
+
+        request.input('email', sql.NVarChar, email);
+            const checkEmailQuery = 'SELECT COUNT(*) as count FROM company WHERE email = @email';
+            const checkEmailResult = await request.query(checkEmailQuery);
+    
+            if (checkEmailResult.recordset[0].count > 0) {
+                throw new Error('Error creating Company: Email already exists');
+            }
     
         request.input('Name', sql.NVarChar, name);
         request.input('Address', sql.NVarChar, address);
-        request.input('PostalCode', sql.Int, tempPostal);
+        request.input('PostalCode', sql.Int, postalcode);
         request.input('Telephone', sql.NVarChar, telephone);
-        request.input('Email', sql.NVarChar, email);
+        // request.input('Email', sql.NVarChar, email);
         request.input('City', sql.NVarChar, city);
         request.input('Country', sql.NVarChar, country);
         request.input('WhatsApp', sql.NVarChar, whatsapp);
-        request.input('PaymentTerms', sql.NVarChar, paymentterms);
+        request.input('PaymentTerms', sql.NVarChar, paymentTermsString);
         request.input('GroupID', sql.BigInt, tempGroup);
         request.input('Status', sql.Int, tempStatus);
     
@@ -94,7 +134,7 @@ class CompanyModel {
         `;
     
         const result = await request.query(query);
-        console.log(result);
+        // console.log(result);
     
         // sql.close();
     
@@ -104,8 +144,8 @@ class CompanyModel {
           throw new Error('Error creating company: No records inserted');
         }
       } catch (err) {
-        console.error('Database error creating company:', err.message);
-        throw new Error('Error creating company: ' + err.message);
+        console.error('Error creating company:', err.message);
+            throw new Error(err.message);
       }
     }
 
@@ -127,18 +167,30 @@ class CompanyModel {
             else{
                 temp=0;
             }
+            const paymentTermsString = paymentterms.join(', ');
             const pool = await this.db;
             const request = pool.request();
-            request.input('CompanyID', sql.BigInt, CompanyID);
+
+
+            request.input('CompanyID', sql.Int, CompanyID);
+            request.input('Email', sql.NVarChar, email);
+            const checkEmailQuery = 'SELECT COUNT(*) as count FROM company WHERE email = @Email AND CompanyID != @CompanyID';
+            const checkEmailResult = await request.query(checkEmailQuery);
+    
+            if (checkEmailResult.recordset[0].count > 0) {
+                throw new Error('Error updating company: Email already exists');
+            }
+
+            // request.input('CompanyID', sql.BigInt, CompanyID);
             request.input('Name', sql.NVarChar, name);
             request.input('Address', sql.NVarChar, address);
             request.input('City', sql.NVarChar, city);
             request.input('PostalCode', sql.Int, postalcode);
             request.input('Country', sql.NVarChar, country);
             request.input('Telephone', sql.NVarChar, telephone);
-            request.input('Email', sql.NVarChar, email);
+            // request.input('Email', sql.NVarChar, email);
             request.input('WhatsApp', sql.NVarChar, whatsapp);
-            request.input('PaymentTerms', sql.NVarChar, paymentterms);
+            request.input('PaymentTerms', sql.NVarChar, paymentTermsString);
             request.input('Status', sql.Int, temp);
             request.input('updated_at', sql.DateTime, updated_at);
 
@@ -162,7 +214,7 @@ class CompanyModel {
             return true;
         } catch (err) {
             console.error('Error updating company:', err.message);
-            throw new Error('Error updating company: ' + err.message);
+            throw new Error(err.message);
         }
     }
 
@@ -176,7 +228,7 @@ class CompanyModel {
             return result.rowsAffected > 0;
         } catch (err) {
             console.error('Error deleting company:', err.message);
-            throw new Error('Error deleting company: ' + err.message);
+            throw new Error(err.message);
         }
     }
 
@@ -186,7 +238,9 @@ class CompanyModel {
           const request = pool.request();
           request.input('companyId', sql.Int, companyId);
           const query = 'UPDATE company SET Status = 1 WHERE CompanyID = @companyId';
+          const query2='UPDATE companyPerson SET Deactive = 1 WHERE companyID = @companyId';
           await request.query(query);
+          await request.query(query2);
           return true;
       } catch (err) {
           throw new Error('Error activating admin: ' + err.message);
@@ -198,13 +252,19 @@ class CompanyModel {
       const pool = await this.db;
       const request = pool.request();
       request.input('companyId', sql.Int, companyId);
-      const query = 'UPDATE company SET Status = 0 WHERE CompanyID = @companyId';
-      await request.query(query);
+  
+      const query1 = 'UPDATE company SET Status = 0 WHERE CompanyID = @companyId';
+      const query2 = 'UPDATE companyPerson SET Deactive = 0 WHERE companyID = @companyId';
+  
+      await request.query(query1);
+      await request.query(query2);
+  
       return true;
-  } catch (err) {
-      throw new Error('Error activating admin: ' + err.message);
+    } catch (err) {
+      throw new Error('Error deactivating company: ' + err.message);
+    }
   }
-  }
+  
 
     async findByEmail(email) {
         try {

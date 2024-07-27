@@ -25,7 +25,6 @@ exports.login = async ({ email, password }) => {
 
         // Check if it's an admin
         let admin = await adminModel.findByEmail(email);
-        // console.log(admin.name,admin.email);
         if (admin && await bcrypt.compare(password, admin.password)) {
             const token = jwt.sign({
                 id: admin.AdminID,
@@ -36,6 +35,20 @@ exports.login = async ({ email, password }) => {
             console.log('Admin logged in successfully');
             return { token };
         }
+
+            // Check if it's a company person
+            let companyPerson = await companyPersonModel.findByEmail(email);
+          
+            if (companyPerson && await bcrypt.compare(password, companyPerson.password)) {
+                const token = jwt.sign({
+                    id: companyPerson.PersonID,
+                    role: 'companyPerson',
+                    name: companyPerson.name,
+                    email: companyPerson.email
+                }, secretKey, { expiresIn: '1h' });
+                console.log('Company person logged in successfully');
+                return { token };
+            }
 
         // Check if it's an employee
         let employee = await employeeModel.findByEmail(email);
@@ -50,18 +63,7 @@ exports.login = async ({ email, password }) => {
             return { token };
         }
 
-        // Check if it's a company person
-        let companyPerson = await companyPersonModel.findByEmail(email);
-        if (companyPerson && await bcrypt.compare(password, companyPerson.password)) {
-            const token = jwt.sign({
-                id: companyPerson.PersonID,
-                role: 'companyPerson',
-                name: companyPerson.name,
-                email: companyPerson.email
-            }, secretKey, { expiresIn: '1h' });
-            console.log('Company person logged in successfully');
-            return { token };
-        }
+    
 
         // If no user found with the given email/password
         console.log('Invalid credentials');

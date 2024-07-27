@@ -19,8 +19,8 @@ class AircraftModel {
     }
 
     async createAircraft(aircraftData) {
-        console.log("received:");
-        console.log(aircraftData);
+        // console.log("received:");
+        // console.log(aircraftData);
         const { type, registration, capacity, operator,marketingby } = aircraftData;
         try {
             const pool = await this.db;

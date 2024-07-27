@@ -24,21 +24,22 @@ exports.getAllCargoRates = async () => {
 
 exports.createCargoRate = async (cargoRateData) => {
     try {
-        const { code, scheduleID, currency, rate, otherAmount, validFrom, validTill, applyTo, category } = cargoRateData;
+        const { code, scheduleID, currency, rate,connectionid, otherAmount, validFrom, validTill, applyTo, category } = cargoRateData;
 
-        console.log('Received cargo rate data:', cargoRateData); // Print received data
+        // console.log('Received cargo rate data:', cargoRateData); // Print received data
 
-        if (!code || !scheduleID || !currency || !rate || !validFrom || !validTill || !applyTo) {
+        if (!code || !currency || !rate || !validFrom || !validTill || !applyTo) {
             return { success: false, message: 'Missing required fields' };
         }
 
-        console.log("routing controller");
+        // console.log("routing controller");
         const newCargoRateData = {
             code,
             scheduleID,
             currency,
             rate,
             otherAmount,
+            connectionid,
             validFrom,
             validTill,
             applyTo,
@@ -58,9 +59,9 @@ exports.createCargoRate = async (cargoRateData) => {
     }
 };
 
-exports.getCargoRates = async (companyPersonID, fromID, toID) => {
+exports.getCargoRates = async (companyPersonID, connectionid) => {
     try {
-        const result = await cargoRatesModel.getCargoRatesForCompanyPerson(companyPersonID, fromID, toID);
+        const result = await cargoRatesModel.getCargoRatesForCompanyPerson(companyPersonID, connectionid);
         if (result) {
             return { success: true, message: 'Cargo rates fetched successfully', data: result };
         }
@@ -74,7 +75,7 @@ exports.getCargoRates = async (companyPersonID, fromID, toID) => {
 
 exports.applyCargoRateToCompanies = async (cargoRateID, companyIDs) => {
     try {
-        console.log("In controller function", cargoRateID, companyIDs);
+        // console.log("In controller function", cargoRateID, companyIDs);
         
         const result = await cargoRatesModel.applyCargoRateToCompanies(cargoRateID, companyIDs);
         
@@ -101,15 +102,20 @@ exports.getCargoRateById = async (id) => {
 exports.updateCargoRate = async (id, cargoRateData) => {
     try {
         const updatedCargoRate = await cargoRatesModel.updateCargoRate(id, cargoRateData);
+
         if (updatedCargoRate) {
+            // console.log(`Cargo rate with ID ${id} updated successfully.`);
             return { success: true, message: 'Cargo rate updated successfully', data: updatedCargoRate };
+        } else {
+            // console.log(`Cargo rate with ID ${id} not found or failed to update.`);
+            return { success: false, message: 'Failed to update cargo rate' };
         }
-        return { success: false, message: 'Failed to update cargo rate' };
     } catch (err) {
-        console.error('Error updating cargo rate:', err.message);
-        return { success: false, message: 'Error updating cargo rate: ' + err.message };
+        console.error(`Error updating cargo rate with ID ${id}:`, err.message);
+        return { success: false, message: `Error updating cargo rate: ${err.message}` };
     }
 };
+
 
 exports.deleteCargoRate = async (id) => {
     try {

@@ -19,7 +19,7 @@ exports.getAllAdmins = async (req, res) => {
         if (!admins || admins.length === 0) {
             return res.status(404).json({ error: 'No admins found' });
         }
-        console.log("hello");
+        // console.log("hello");
         res.json(admins);
     } catch (err) {
         console.error('Error fetching all admins:', err);
@@ -36,8 +36,8 @@ exports.getAllAdmins = async (req, res) => {
 
 exports.createAdmin = async (adminData) => {
     try {
-        console.log("in admin controller");
-        console.log(adminData);
+        // console.log("in admin controller");
+        // console.log(adminData);
         const { name, email, password,status } = adminData;
 
         if (!name || !email || !password || !status) {
@@ -51,6 +51,7 @@ exports.createAdmin = async (adminData) => {
         const newAdminData = {
             name,
             email,
+            RealPassword:password,
             password: hashedPassword,
             created_at: new Date(),
             updated_at: new Date(),
@@ -67,7 +68,7 @@ exports.createAdmin = async (adminData) => {
         return result;
     } catch (err) {
         console.error('Error in createAdmin function:', err.message);
-        res.status(500).json({ error: 'Error creating admin: ' + err.message });
+        throw new Error(err.message);
     }
 };
 
@@ -102,12 +103,12 @@ exports.updateAdmin = async (adminId, newData) => {
         return result; // Return the result of the update operation (true/false or any relevant data)
     } catch (err) {
         console.error('Error in updateAdmin function:', err.message);
-        throw err; // Throw the error to be caught by the calling function or middleware
+        throw new Error(err.message);
     }
 };
 exports.deleteAdmin = async (adminId) => {
     try {
-      console.log(`Deleting admin from controller: ${adminId}`);
+    //   console.log(`Deleting admin from controller: ${adminId}`);
       const result = await adminModel.deleteAdmin(adminId);
       return result;
     } catch (err) {
@@ -132,7 +133,7 @@ exports.getAdminById = async (req, res) => {
 
 exports.activateAdmin = async (adminId) => {
     try {
-        console.log(`activating admin from controller: ${adminId}`);
+        // console.log(`activating admin from controller: ${adminId}`);
         const result = await adminModel.activateAdmin(adminId);
         return result;
       } 
@@ -145,7 +146,7 @@ exports.activateAdmin = async (adminId) => {
 };
 exports.deactivateAdmin = async (adminId) => {
     try {
-        console.log(`deactivating admin from controller: ${adminId}`);
+        // console.log(`deactivating admin from controller: ${adminId}`);
         const result = await adminModel.deactivateAdmin(adminId);
         return result;
       } 
@@ -160,7 +161,6 @@ exports.deactivateAdmin = async (adminId) => {
 
 exports.getDetails = async (id) => {
     try {
-        console.log(`Route: POST adminController/profile - Get all Details for id: ${id}`);
         const result = await adminModel.getDetails(id);
 
        if (!result || result.length === 0) {

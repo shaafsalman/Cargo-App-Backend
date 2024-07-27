@@ -1,5 +1,8 @@
 const bcrypt = require('bcrypt');
 const sql = require('mssql');
+const AccountEmailSender = require('./../Utility/AccountEmailSender');
+const saltRounds = parseInt(process.env.SALT) || 10;
+
 
 class EmployeeModel {
     constructor(db) {
@@ -52,8 +55,8 @@ class EmployeeModel {
     
             const pool = await this.db;
             const request = pool.request();
-    
-            request.input('employeeid', sql.Int, employeeID); // Use the retrieved EmployeeID
+
+            request.input('employeeid', sql.Int, employeeID);
             request.input('manageEmployee', sql.Int, employeeTemp);
             request.input('manageCustomer', sql.Int, customerTemp);
             request.input('manageUser', sql.Int, userTemp);
@@ -82,15 +85,15 @@ class EmployeeModel {
                 throw new Error('Error updating employee permissions: No records updated');
             }
         } catch (err) {
-            console.error('Error updating employee permissions:', err.message);
-            throw new Error('Error updating employee permissions: ' + err.message);
+            console.error('Error updating employee:', err.message);
+            throw new Error(err.message);
         }
     }
     
 
     async createEmployee(employeeData) {
         console.log("in model");
-        const { name, email, RegionID, password,region, created_at, updated_at, password_reset_token, groupid, customerid, remember_token, email_verified_at, status } = employeeData;
+        const { name, email, RegionID, password, created_at, updated_at, password_reset_token, groupid, customerid, remember_token, email_verified_at, status } = employeeData;
         console.log(employeeData);
         let temp;
         if(status==="active"){
@@ -104,13 +107,20 @@ class EmployeeModel {
             
             const pool = await this.db;
             const request = pool.request();
-            // const hashedPassword = await bcrypt.hash(password, 10);
+
+            request.input('email', sql.NVarChar, email);
+            const checkEmailQuery = 'SELECT COUNT(*) as count FROM employee WHERE email = @email';
+            const checkEmailResult = await request.query(checkEmailQuery);
+    
+            if (checkEmailResult.recordset[0].count > 0) {
+                throw new Error('Error creating employee: Email already exists');
+            }
+            
+            const hashedPassword = await bcrypt.hash(password, 10);
 
             request.input('name', sql.NVarChar, name);
-            request.input('email', sql.NVarChar, email);
-            request.input('region', sql.NVarChar, region);
             request.input('RegionID', sql.Int, RegionID);
-            request.input('password', sql.NVarChar, password);
+            request.input('password', sql.NVarChar, hashedPassword);
             request.input('created_at', sql.DateTime, created_at);
             request.input('updated_at', sql.DateTime, updated_at);
             request.input('password_reset_token', sql.NVarChar, password_reset_token);
@@ -120,22 +130,23 @@ class EmployeeModel {
             request.input('email_verified_at', sql.DateTime, email_verified_at);
             request.input('deactive', sql.Int, temp);
             const query = `
-                INSERT INTO employee (name, email, RegionID, region, password, created_at, updated_at, password_reset_token, groupid, customerid, remember_token, email_verified_at, deactive)
+                INSERT INTO employee (name, email, RegionID, password, created_at, updated_at, password_reset_token, groupid, customerid, remember_token, email_verified_at, deactive)
                 OUTPUT INSERTED.EmployeeID
-                VALUES (@name, @email, @RegionID, @region, @password, @created_at, @updated_at, 
+                VALUES (@name, @email, @RegionID, @password, @created_at, @updated_at, 
                         @password_reset_token, @groupid, @customerid, @remember_token, 
                         @email_verified_at, @deactive)
             `;
 
             const result = await request.query(query);
         if (result.recordset.length > 0) {
-            return result.recordset[0].EmployeeID; // Return the EmployeeID
+            AccountEmailSender(email, name, password, "Employee");
+            return result.recordset[0].EmployeeID; 
         } else {
             throw new Error('Error creating employee: No records inserted');
         }
         } catch (err) {
             console.error('Error creating employee:', err.message);
-            throw new Error('Error creating employee: ' + err.message);
+            throw new Error(err.message);
         }
     }
 
@@ -158,7 +169,7 @@ class EmployeeModel {
             const pool = await this.db;
             const request = pool.request();
     
-            request.input('employeeid', sql.Int, employeeID); // Use the retrieved EmployeeID
+            request.input('employeeid', sql.Int, employeeID); 
             request.input('manageEmployee', sql.Int, employeeTemp);
             request.input('manageCustomer', sql.Int, customerTemp);
             request.input('manageUser', sql.Int, userTemp);
@@ -186,21 +197,29 @@ class EmployeeModel {
     }    
 
     async updateEmployee(employeeId, updatedEmployeeData) {
-        const { name, email, status, password, RegionID, region } = updatedEmployeeData;
+        const { name, email, status, password, RegionID } = updatedEmployeeData;
         console.log(updatedEmployeeData);
         
         try {
             console.log("here in model");
-            console.log(region);
+            // console.log(region);
             const pool = await this.db;
             const request = pool.request();
             // const hashedPassword = await bcrypt.hash(password, 10);
             let temp = status === true || status === 'active' || status === 'Active' ? 1 : 0;
 
             request.input('employeeId', sql.Int, employeeId);
-            request.input('name', sql.NVarChar, name);
             request.input('email', sql.NVarChar, email);
-            request.input('region', sql.NVarChar, region);
+            const checkEmailQuery = 'SELECT COUNT(*) as count FROM employee WHERE email = @email AND employeeid != @employeeid';
+            const checkEmailResult = await request.query(checkEmailQuery);
+    
+            if (checkEmailResult.recordset[0].count > 0) {
+                throw new Error('Error updating employee: Email already exists');
+            }
+
+            // request.input('employeeId', sql.Int, employeeId);
+            request.input('name', sql.NVarChar, name);
+            // request.input('email', sql.NVarChar, email);
             request.input('RegionID', sql.Int, RegionID);
             request.input('password', sql.NVarChar, password);
             request.input('deactive', sql.Int, temp);
@@ -212,7 +231,6 @@ class EmployeeModel {
                     email = @email,
                     RegionID = @RegionID,
                     password = @password,
-                    region = @region,
                     deactive = @deactive,
                     updated_at = @updated_at
                 WHERE EmployeeID = @employeeId;
@@ -226,7 +244,7 @@ class EmployeeModel {
             }
         } catch (err) {
             console.error('Error updating employee:', err.message);
-            throw new Error('Error updating employee: ' + err.message);
+            throw new Error(err.message);
         }
     }
 

@@ -25,7 +25,8 @@ router.post('/add', async (req, res, next) => {
         const newAdmin = await adminController.createAdmin(adminData);
         res.status(201).json(newAdmin);
     } catch (err) {
-        console.error('Error creating admin:', err.message);
+        console.error('Error creating admin route:', err.message);
+        res.status(400).json({ error: err.message });
         next(err); 
     }
 });
@@ -56,6 +57,7 @@ router.put('/:id', async (req, res, next) => {
         res.json(updatedAdmin);
     } catch (err) {
         console.error(`Error updating admin with ID ${id}:`, err.message);
+        res.status(400).json({ error: err.message });
         next(err);
     }
 });

@@ -18,6 +18,30 @@ router.get('/', async (req, res, next) => {
 
 
 });
+
+router.get('/get-payment-terms', async (req, res, next) => {
+    try {
+
+      const { companyPersonId } = req.query; 
+      console.log("getting payment terms",companyPersonId);
+  
+      const paymentTerms = await companyController.getPaymentTerms(companyPersonId);
+      console.log(paymentTerms);
+      res.status(200).json({
+        success: true,
+        message: 'Payment terms retrieved successfully',
+        paymentTerms: paymentTerms
+      });
+    } catch (error) {
+      console.error('Error fetching payment terms:', error.message);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fetch payment terms',
+        error: error.message
+      });
+    }
+  });
+
 router.get('/comp', async (req, res, next) => {
     try {
         console.log("Route: GET / - Fetch some companies");
@@ -30,7 +54,7 @@ router.get('/comp', async (req, res, next) => {
 
 
 // POST /add - Create new company
-router.post('/add', async (req, res) => {
+router.post('/add',  async (req, res, next) => {
     try {
       console.log("Route: POST /add - Create new company");
       console.log('Request body:', req.body);
@@ -42,8 +66,10 @@ router.post('/add', async (req, res) => {
     } 
     catch (err) 
     {
-      console.error('Error creating company:', err.message);
-      res.status(500).json({ message: 'Internal server error' });
+        console.log("im here");
+        console.error('Error creating company:', err.message);
+        res.status(400).json({ error: err.message });
+        next(err);
     }
   });
 
@@ -74,11 +100,11 @@ router.put('/:id', async (req, res, next) => {
         const updatedCompany = await companyController.updateCompany(id, companyData);
         res.json(updatedCompany);
     } catch (err) {
-        console.error(`Error updating company with ID ${id}:`, err.message);
+        console.error('Error updating company:', err.message);
+        res.status(400).json({ error: err.message });
         next(err);
     }
 });
-
 // DELETE a company
 router.delete('/:id', async (req, res, next) => {
     const { id } = req.params;

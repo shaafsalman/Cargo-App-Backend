@@ -14,21 +14,21 @@ router.get('/', async (req, res, next) => {
     }
 });
 
-// GET region by ID
-router.get('/:id', async (req, res, next) => {
-    const { id } = req.params;
-    try {
-        console.log(`Route: GET /${id} - Fetch region by ID`);
-        const region = await regionController.getRegionById(id);
-        if (!region) {
-            return res.status(404).json({ error: 'Region not found' });
-        }
-        res.json(region);
-    } catch (err) {
-        console.error(`Error fetching region with ID ${id}:`, err.message);
-        next(err);
-    }
-});
+// // GET region by ID
+// router.get('/:id', async (req, res, next) => {
+//     const { id } = req.params;
+//     try {
+//         console.log(`Route: GET /${id} - Fetch region by ID`);
+//         const region = await regionController.getRegionById(id);
+//         if (!region) {
+//             return res.status(404).json({ error: 'Region not found' });
+//         }
+//         res.json(region);
+//     } catch (err) {
+//         console.error(`Error fetching region with ID ${id}:`, err.message);
+//         next(err);
+//     }
+// });
 
 // Error handling middleware - this middleware should be defined last
 router.use((err, req, res, next) => {

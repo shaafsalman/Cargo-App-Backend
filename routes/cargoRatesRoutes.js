@@ -24,8 +24,8 @@ router.post('/add', async (req, res, next) => {
     try {
         console.log("Route: POST /add - Create new cargo rate");
         console.log(req.body);
-        const { code, scheduleID, currency, rate, otherAmount, validFrom, validTill, applyTo, category } = req.body;
-        const cargoRateData = { code, scheduleID, currency, rate, otherAmount, validFrom, validTill, applyTo, category };
+        const { code, scheduleID, currency, rate, validFrom, validTill, connectionid, applyTo, category } = req.body;
+        const cargoRateData = { code, scheduleID, connectionid, currency, rate, validFrom, validTill, applyTo, category };
         const result = await cargoRatesController.createCargoRate(cargoRateData);
         if (result.success) {
             res.status(201).json({ message: result.message, data: result.data });
@@ -50,7 +50,7 @@ router.post('/:cargoRateID/companies', async (req, res, next) => {
         const result = await cargoRatesController.applyCargoRateToCompanies(cargoRateID, companyIDs);
         
         if (result.success) {
-            res.json({ message: result.message, data: result.data });
+            res.status(201).json({ message: result.message, data: result.data });
         } else {
             res.status(400).json({ error: result.message });
         }
@@ -65,7 +65,7 @@ router.get('/get-rates/:id', async (req, res, next) => {
     const { id } = req.params;
     try {
         console.log(`Route: GET /get-rates-company-person/${id} - Fetch cargo rates for company person`);
-        const result = await cargoRatesController.getCargoRates(id, req.query.fromID, req.query.toID);
+        const result = await cargoRatesController.getCargoRates(id, req.query.connectionid);
         if (result.success) {
             res.json(result.data);
         } else {
@@ -98,11 +98,14 @@ router.get('/:id', async (req, res, next) => {
 router.put('/:id', async (req, res, next) => {
     const { id } = req.params;
     const cargoRateData = req.body;
+
+    console.log("router: ",cargoRateData);
     try {
         console.log(`Route: PUT /${id} - Update cargo rate`);
         const result = await cargoRatesController.updateCargoRate(id, cargoRateData);
         if (result.success) {
-            res.json({ message: result.message, data: result.data });
+            console.log("done");
+            res.status(201).json({ message: result.message, data: result.data });
         } else {
             res.status(400).json({ error: result.message });
         }

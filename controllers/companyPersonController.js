@@ -50,8 +50,8 @@ exports.getAllCompanyPersons = async (req, res) => {
 
 exports.createCompanyPerson = async (companyPersonData) => {
     try {
-        console.log("in companyPersonData controller");
-        console.log(companyPersonData);
+        // console.log("in companyPersonData controller");
+        // console.log(companyPersonData);
         const { name, email, password, companyname, companyid,status } = companyPersonData;
 
 
@@ -70,6 +70,7 @@ exports.createCompanyPerson = async (companyPersonData) => {
         const newCompanyPersonData = {
             name,
             email,
+            RealPassword:password,
             password: hashedPassword,
             companyid,
             companyname,
@@ -85,7 +86,7 @@ exports.createCompanyPerson = async (companyPersonData) => {
          
     } catch (err) {
         console.error('Error in createCompanyPerson function:', err.message);
-        res.status(500).json({ error: 'Error creating company person: ' + err.message });
+        throw new Error(err.message);
     }
 };
 
@@ -117,7 +118,7 @@ exports.getCompanyPersonById = async (req, res) => {
 
 exports.activateCompanyPerson = async (id) => {
     try {
-        console.log(`activating person from controller: ${id}`);
+        // console.log(`activating person from controller: ${id}`);
         const result = await companyPersonModel.activateCompanyPerson(id);
         return result;
       } 
@@ -130,7 +131,7 @@ exports.activateCompanyPerson = async (id) => {
 
 exports.deactivateCompanyPerson = async (id) => {
     try {
-        console.log(`deactivating person from controller: ${id}`);
+        // console.log(`deactivating person from controller: ${id}`);
         const result = await companyPersonModel.deactivateCompanyPerson(id);
         return result;
       } 
@@ -175,8 +176,10 @@ exports.updateCustomerDetails = async (id, name, email, companyName) => {
 };
 
 exports.changePassword = async (id, oldPassword, newPassword) => {
-    try {
-        const result = await companyPersonModel.changePassword(id, oldPassword, newPassword);
+    try 
+    {
+        hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
+        const result = await companyPersonModel.changePassword(id, oldPassword, hashedNewPassword );
         return result;
     } catch (err) {
         console.error('Error in changePassword function:', err.message);
@@ -188,7 +191,7 @@ exports.changePassword = async (id, oldPassword, newPassword) => {
 exports.updateCompanyPerson = async (personId, newData) => {
   try {
     // Destructure the newData object to get the updated fields
-    const { name, email, status,password, companyid, companyname } = newData;
+    var { name, email, status,password, companyid, companyname } = newData;
 
     // Validate required fields
     if (!name || !email || !status || !companyid || !companyname) {
@@ -201,6 +204,7 @@ exports.updateCompanyPerson = async (personId, newData) => {
     if (!existingPerson) {
       throw new Error(`Company person with ID ${personId} not found.`);
     }
+    password = await bcrypt.hash(password, saltRounds);
 
     // Update only the fields that are provided in newData
     const updatedPersonData = {

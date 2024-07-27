@@ -29,7 +29,8 @@ router.post('/add', async (req, res, next) => {
         
         res.status(201).json(newEmployee);
     } catch (err) {
-        console.error('Error creating employee:', err.message);
+        console.error('Error creaating employee:', err.message);
+        res.status(400).json({ error: err.message });
         next(err);
     }
 });
@@ -59,7 +60,7 @@ router.put('/:id', async (req, res, next) => {
         const { name, email, RegionID, region, password, status } = req.body.selectedEmployee; 
         // console.log(req.body.newPermissions);
         // Extract newEmployee data
-        const  permissions  = req.body.newPermissions; // Extract newPermissions
+        const  permissions  = req.body.newPermissions;
         // console.log(region);
         console.log(permissions);
         const employeeData = { name, email, region, RegionID, password, status, permissions };
@@ -67,6 +68,7 @@ router.put('/:id', async (req, res, next) => {
         res.json(updateEmployee);
     } catch (err) {
         console.error(`Error updating employee with ID ${id}:`, err.message);
+        res.status(400).json({ error: err.message });
         next(err);
     }
 });
