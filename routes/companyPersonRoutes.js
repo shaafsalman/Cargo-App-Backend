@@ -6,7 +6,7 @@ const router = express.Router();
 // GET all company persons
 router.get('/', async (req, res, next) => {
     try {
-        console.log("Route: GET / - Fetch all company persons");
+        console.log("Route: GET / - Fetch all user");
         await companyPersonController.getAllCompanyPersons(req, res);
     } catch (err) {
         console.error('Error in companyPersonRoutes:', err.message);
@@ -50,11 +50,11 @@ router.get('/:id', async (req, res, next) => {
         console.log(`Route: GET /${id} - Fetch company person by ID`);
         const companyPerson = await companyPersonController.getCompanyPersonById(id);
         if (!companyPerson) {
-            return res.status(404).json({ error: 'Company person not found' });
+            return res.status(404).json({ error: 'User not found' });
         }
         res.json(companyPerson);
     } catch (err) {
-        console.error(`Error fetching company person with ID ${id}:`, err.message);
+        console.error(`Error fetching user with ID ${id}:`, err.message);
         next(err);
     }
 });
@@ -70,7 +70,7 @@ router.put('/:id', async (req, res, next) => {
         res.json(updatedCompanyPerson);
         
     } catch (err) {
-        console.error(`Error updating company person with ID ${id}:`, err.message);
+        console.error(`Error user person with ID ${id}:`, err.message);
         next(err);
     }
 });
@@ -82,9 +82,9 @@ router.delete('/:id', async (req, res, next) => {
         console.log(`Route: DELETE /${id} - Delete company person`);
         const result = await companyPersonController.deleteCompanyPerson(id);
         if (!result) {
-            return res.status(404).json({ error: 'Company person not found' });
+            return res.status(404).json({ error: 'User not found' });
         }
-        res.json({ message: 'Company person deleted successfully' });
+        res.json({ message: 'User deleted successfully' });
     } catch (err) {
         console.error(`Error deleting company person with ID ${id}:`, err.message);
         next(err);
@@ -98,9 +98,9 @@ router.patch('/:id/active', async (req, res, next) => {
         console.log(`Route: PATCH /${id}/activate - Activate company person`);
         const result = await companyPersonController.activateCompanyPerson(id);
         if (!result) {
-            return res.status(404).json({ error: 'Company person not found' });
+            return res.status(404).json({ error: 'user not found' });
         }
-        res.json({ message: 'Company person activated successfully' });
+        res.json({ message: 'User activated successfully' });
     } catch (err) {
         console.error(`Error activating company person with ID ${id}:`, err.message);
         next(err);
@@ -114,9 +114,9 @@ router.patch('/:id/inactive', async (req, res, next) => {
         console.log(`Route: PATCH /${id}/deactivate - Deactivate company person`);
         const result = await companyPersonController.deactivateCompanyPerson(id);
         if (!result) {
-            return res.status(404).json({ error: 'Company person not found' });
+            return res.status(404).json({ error: 'User not found' });
         }
-        res.json({ message: 'Company person deactivated successfully' });
+        res.json({ message: 'User deactivated successfully' });
     } catch (err) {
         console.error(`Error deactivating company person with ID ${id}:`, err.message);
         next(err);

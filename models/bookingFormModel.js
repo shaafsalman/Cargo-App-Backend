@@ -52,7 +52,11 @@ class BookingFormModel {
         rt.RegionName AS toRegion,
         FORMAT(b.created_at, 'dd-MM-yyyy') AS createdDate,
         cr.Rate AS cargoRate, 
-        cr.Currency AS cargoRateCurrency
+        cr.Currency AS cargoRateCurrency,
+         CASE 
+            WHEN b.masterAwb = 0 THEN b.awb 
+            ELSE b.masterAwb 
+        END AS masterAwb
     FROM booking b
     INNER JOIN shipper s ON b.shipper_id = s.shipper_id
     INNER JOIN consignee c ON b.consignee_id = c.consignee_id
@@ -110,10 +114,6 @@ class BookingFormModel {
         }
     }
 
-
-
-
-
     async getBookingByAwb(awb) {
         try {
             const pool = await this.db;
@@ -133,8 +133,6 @@ class BookingFormModel {
     }
     
   
-    
-    
     async getBookingsByToId(toId) {
         try {
             const pool = await this.db;
@@ -268,7 +266,7 @@ class BookingFormModel {
                 dangerousGoodsCodes, goodsDescriptionsCodes, specialHandlingCodes,
                 status, createdBy, createdById, userEmail, shipperId, shipperName,
                 shipperPhone,shipperWhatsapp, shipperEmail, shipperAddress, shipperCountry, shipperCity,
-                consigneeId, consigneeName, consigneePhone,consigneeWhatsapp, consigneeEmail, consigneeAddress, consigneeCountry, consigneeCity,
+                consigneeId, masterAwb,consigneeName, consigneePhone,consigneeWhatsapp, consigneeEmail, consigneeAddress, consigneeCountry, consigneeCity,
                 packageId, packageBookingId, packageLength, packageWidth, packageHeight,
                 packageWeight, packageCount, flightName,flightDate, fromRegion, toRegion,
                 createdDate
@@ -281,7 +279,7 @@ class BookingFormModel {
                     dangerousGoodsCodes, goodsDescriptionsCodes, specialHandlingCodes,
                     status, createdBy, createdById, userEmail, shipperId, shipperName,
                     shipperPhone,shipperWhatsapp, shipperEmail, shipperAddress, shipperCountry, shipperCity,
-                    consigneeId, consigneeName, consigneePhone,consigneeWhatsapp,consigneeEmail, consigneeAddress, consigneeCountry, consigneeCity,
+                    consigneeId, masterAwb,consigneeName, consigneePhone,consigneeWhatsapp,consigneeEmail, consigneeAddress, consigneeCountry, consigneeCity,
                     flightName,flightDate, fromRegion, toRegion, createdDate,
                     packages: []
                 };
@@ -499,6 +497,45 @@ class BookingFormModel {
             throw new Error('Error fetching all cargo categories: ' + err.message);
         }
     }
+    async addCargoCategory(code, category) {
+        try {
+            const pool = await this.db;
+            const request = pool.request();
+    
+            const query = `
+                INSERT INTO cargo_categories (code, category)
+                VALUES (@code, @category)
+            `;
+            
+            request.input('code', code);
+            request.input('category', category);
+            
+            await request.query(query);
+            return { message: 'Cargo category added successfully.' };
+        } catch (err) {
+            throw new Error('Error adding cargo category: ' + err.message);
+        }
+    }
+    
+    async deleteCargoCategory(code) {
+        try {
+            const pool = await this.db;
+            const request = pool.request();
+    
+            const query = `
+                DELETE FROM cargo_categories
+                WHERE code = @code
+            `;
+            
+            request.input('code', code);
+            
+            await request.query(query);
+            return { message: 'Cargo category deleted successfully.' };
+        } catch (err) {
+            throw new Error('Error deleting cargo category: ' + err.message);
+        }
+    }
+    
     async getAllSpecialHandlingCodes() {
         try {
             const pool = await this.db;
@@ -514,6 +551,46 @@ class BookingFormModel {
             throw new Error('Error fetching all special handling codes: ' + err.message);
         }
     }
+    async addSpecialHandlingCode(code, description) {
+        try {
+            const pool = await this.db;
+            const request = pool.request();
+    
+            const query = `
+                INSERT INTO special_handling (code, description)
+                VALUES (@code, @description)
+            `;
+            
+            request.input('code', code);
+            request.input('description', description);
+            
+            await request.query(query);
+            return { message: 'Special handling code added successfully.' };
+        } catch (err) {
+            throw new Error('Error adding special handling code: ' + err.message);
+        }
+    }
+    
+    async deleteSpecialHandlingCode(code) {
+        try {
+            const pool = await this.db;
+            const request = pool.request();
+    
+            const query = `
+                DELETE FROM special_handling
+                WHERE code = @code
+            `;
+            
+            request.input('code', code);
+            
+            await request.query(query);
+            return { message: 'Special handling code deleted successfully.' };
+        } catch (err) {
+            throw new Error('Error deleting special handling code: ' + err.message);
+        }
+    }
+    
+
     async getAllDangerousGoods() {
         try {
             // console.log("in model");
@@ -530,6 +607,52 @@ class BookingFormModel {
             throw new Error('Error fetching all Dangerous Goods: ' + err.message);
         }
     }
+    async addDangerousGoods(code, description) {
+        try {
+            const pool = await this.db;
+            const request = pool.request();
+    
+            const query = `
+                INSERT INTO dangerous_goods (code, description)
+                VALUES (@code, @description)
+            `;
+            
+            request.input('code', code);
+            request.input('description', description);
+            
+            await request.query(query);
+            return { message: 'Dangerous goods added successfully.' };
+        } catch (err) {
+            throw new Error('Error adding dangerous goods: ' + err.message);
+        }
+    }
+    
+    async deleteDangerousGoods(code) {
+        try {
+            const pool = await this.db;
+            const request = pool.request();
+    
+            const query = `
+                DELETE FROM dangerous_goods
+                WHERE code = @code
+            `;
+            
+            request.input('code', code);
+            
+            await request.query(query);
+            return { message: 'Dangerous goods deleted successfully.' };
+        } catch (err) {
+            throw new Error('Error deleting dangerous goods: ' + err.message);
+        }
+    }
+    
+
+
+
+
+
+
+
 
     async deleteBookingForm(awb) {
         try {
@@ -707,7 +830,27 @@ class BookingFormModel {
             throw new Error('Error adding booking: ' + err.message);
         }
     }
-    
+    async addMasterAwb(masterAwb, awbs) {
+        console.log('adding master awb: ' + masterAwb, awbs);
+        const transaction = new sql.Transaction(this.db);
+        try {
+            await transaction.begin();
+
+            for (const [index, awb] of awbs.entries()) {
+                const request = new sql.Request(transaction);
+                request.input('masterAwb', sql.BigInt, masterAwb);
+                request.input(`awb_${index}`, sql.BigInt, awb);
+                await request.query(`UPDATE Booking SET masterAwb = @masterAwb WHERE awb = @awb_${index}`);
+            }
+
+            await transaction.commit();
+            return { success: true };
+        } catch (error) {
+            await transaction.rollback();
+            console.error('Error adding master AWB:', error);
+            throw new Error('Failed to add master AWB');
+        }
+    }
     
 }
 

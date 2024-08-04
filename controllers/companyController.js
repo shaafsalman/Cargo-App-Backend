@@ -18,12 +18,12 @@ exports.getAllCompanies = async (req, res) => {
         // console.log("companies at controller",companies); 
 
         if (!companies || companies.length === 0) {
-            return res.status(404).json({ error: 'No companies found' });
+            return res.status(404).json({ error: 'No customers found' });
         }
         
         res.json(companies);
     } catch (err) {
-        console.error('Error fetching all companies:', err);
+        console.error('Error fetching all customers:', err);
         
         if (err instanceof TypeError) {
             return res.status(400).json({ error: 'Invalid data received' });
@@ -31,7 +31,7 @@ exports.getAllCompanies = async (req, res) => {
             return res.status(500).json({ error: 'Database error: ' + err.message });
         }
         
-        res.status(500).json({ error: 'Error fetching companies: ' + err.message });
+        res.status(500).json({ error: 'Error fetching customers: ' + err.message });
     }
 };
 exports.getPaymentTerms = async (companyPersonId) => {
@@ -62,12 +62,12 @@ exports.getSomeCompanies = async (req, res) => {
         const companies = await companyModel.getSomeCompanies();
         
         if (!companies || companies.length === 0) {
-            return res.status(404).json({ error: 'No companies found' });
+            return res.status(404).json({ error: 'No customers found' });
         }
         
         res.json(companies);
     } catch (err) {
-        console.error('Error fetching some companies:', err);
+        console.error('Error fetching some customers:', err);
         
         if (err instanceof TypeError) {
             return res.status(400).json({ error: 'Invalid data received' });
@@ -75,7 +75,7 @@ exports.getSomeCompanies = async (req, res) => {
             return res.status(500).json({ error: 'Database error: ' + err.message });
         }
         
-        res.status(500).json({ error: 'Error fetching companies: ' + err.message });
+        res.status(500).json({ error: 'Error fetching customers: ' + err.message });
     }
 };
 
@@ -87,12 +87,12 @@ exports.createCompany = async (companyData) => {
       const result = await companyModel.createCompany(companyData);
   
       if (result) {
-        return 'Company created successfully';
+        return 'Customer created successfully';
       } else {
-        throw new Error('Failed to create company');
+        throw new Error('Failed to create customer');
       }
     }  catch (err) {
-        console.error('Error in create Company function:', err.message);
+        console.error('Error in create customer function:', err.message);
         throw new Error(err.message);
     }
   };
@@ -111,7 +111,7 @@ exports.deleteCompany = async (id) => {
         }
     } catch (err) {
         console.error(`Error in deleteCompany controller: ${err.message}`);
-        res.status(500).json({ error: `Error deleting company: ${err.message}` });
+        res.status(500).json({ error: `Error deleting customer: ${err.message}` });
     }
 };
 
@@ -122,7 +122,7 @@ exports.getCompanyById = async (req, res) => {
         if (company) {
             res.json(company);
         } else {
-            res.status(404).json({ error: 'Company not found' });
+            res.status(404).json({ error: 'Customer not found' });
         }
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -145,7 +145,7 @@ exports.updateCompany = async (companyId, newData) => {
         // Example validation:
         const existtingCompany = await companyModel.getCompanyById(companyId);
         if (!existtingCompany) {
-            throw new Error(`Company with ID ${companyId} not found.`);
+            throw new Error(`Customer with ID ${companyId} not found.`);
         }
 
         // Update only the fields that are provided in newData
@@ -199,10 +199,10 @@ exports.findByEmail = async (req, res) => {
         if (company) {
             res.json(company);
         } else {
-            res.status(404).json({ error: 'Company not found' });
+            res.status(404).json({ error: 'Customer not found' });
         }
     } catch (err) {
         console.error('Error fetching company by email:', err.message);
-        res.status(500).json({ error: 'Error fetching company by email: ' + err.message });
+        res.status(500).json({ error: 'Error fetching customer by email: ' + err.message });
     }
 };

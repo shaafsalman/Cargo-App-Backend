@@ -6,7 +6,7 @@ const router = express.Router();
 // GET all companies
 router.get('/', async (req, res, next) => {
     try {
-        console.log("Route: GET / - Fetch all companies");
+        console.log("Route: GET / - Fetch all customers");
         console.log(req.body);
         await companyController.getAllCompanies(req, res);
     } 
@@ -44,7 +44,7 @@ router.get('/get-payment-terms', async (req, res, next) => {
 
 router.get('/comp', async (req, res, next) => {
     try {
-        console.log("Route: GET / - Fetch some companies");
+        console.log("Route: GET / - Fetch some customers");
         await companyController.getSomeCompanies(req, res);
     } catch (err) {
         console.error('Error in companyRoutes:', err.message);
@@ -56,7 +56,7 @@ router.get('/comp', async (req, res, next) => {
 // POST /add - Create new company
 router.post('/add',  async (req, res, next) => {
     try {
-      console.log("Route: POST /add - Create new company");
+      console.log("Route: POST /add - Create new customer");
       console.log('Request body:', req.body);
       const { name, address, postalcode, telephone,city,country, email, whatsapp, paymentterms, status } = req.body;
       companyData ={ name, address, postalcode,city,country, telephone, email, whatsapp, paymentterms, status };
@@ -67,7 +67,7 @@ router.post('/add',  async (req, res, next) => {
     catch (err) 
     {
         console.log("im here");
-        console.error('Error creating company:', err.message);
+        console.error('Error creating customer:', err.message);
         res.status(400).json({ error: err.message });
         next(err);
     }
@@ -79,14 +79,14 @@ router.post('/add',  async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
     const { id } = req.params;
     try {
-        console.log(`Route: GET /${id} - Fetch company by ID`);
+        console.log(`Route: GET /${id} - Fetch customer by ID`);
         const company = await companyController.getCompanyById(id);
         if (!company) {
-            return res.status(404).json({ error: 'Company not found' });
+            return res.status(404).json({ error: 'Customer not found' });
         }
         res.json(company);
     } catch (err) {
-        console.error(`Error fetching company with ID ${id}:`, err.message);
+        console.error(`Error fetching customer with ID ${id}:`, err.message);
         next(err);
     }
 });
@@ -96,11 +96,11 @@ router.put('/:id', async (req, res, next) => {
     const { id } = req.params;
     const companyData = req.body;
     try {
-        console.log(`Route: PUT /${id} - Update company`);
+        console.log(`Route: PUT /${id} - Update customer`);
         const updatedCompany = await companyController.updateCompany(id, companyData);
         res.json(updatedCompany);
     } catch (err) {
-        console.error('Error updating company:', err.message);
+        console.error('Error updating customer:', err.message);
         res.status(400).json({ error: err.message });
         next(err);
     }
@@ -110,14 +110,14 @@ router.delete('/:id', async (req, res, next) => {
     const { id } = req.params;
 
     try {
-        console.log(`Route: DELETE /${id} - Delete company`);
+        console.log(`Route: DELETE /${id} - Delete customer`);
         const result = await companyController.deleteCompany(id);
         if (!result) {
-            return res.status(404).json({ error: 'Company not found' });
+            return res.status(404).json({ error: 'Customer not found' });
         }
-        res.json({ message: 'Company deleted successfully' });
+        res.json({ message: 'Customer deleted successfully' });
     } catch (err) {
-        console.error(`Error deleting company with ID ${id}:`, err.message);
+        console.error(`Error deleting customer with ID ${id}:`, err.message);
         next(err);
     }
 });
@@ -126,14 +126,14 @@ router.delete('/:id', async (req, res, next) => {
 router.patch('/:id/active', async (req, res, next) => {
     const { id } = req.params;
     try {
-        console.log(`Route: PATCH /${id}/activate - Activate company`);
+        console.log(`Route: PATCH /${id}/activate - Activate customer`);
         const result = await companyController.activateCompany(id);
         if (!result) {
-            return res.status(404).json({ error: 'Company not found' });
+            return res.status(404).json({ error: 'Customer not found' });
         }
-        res.json({ message: 'Company activated successfully' });
+        res.json({ message: 'Customer activated successfully' });
     } catch (err) {
-        console.error(`Error activating company with ID ${id}:`, err.message);
+        console.error(`Error activating customer with ID ${id}:`, err.message);
         next(err);
     }
 });
@@ -142,14 +142,14 @@ router.patch('/:id/active', async (req, res, next) => {
 router.patch('/:id/inactive', async (req, res, next) => {
     const { id } = req.params;
     try {
-        console.log(`Route: PATCH /${id}/deactivate - Deactivate company`);
+        console.log(`Route: PATCH /${id}/deactivate - Deactivate customer`);
         const result = await companyController.deactivateCompany(id);
         if (!result) {
-            return res.status(404).json({ error: 'Company not found' });
+            return res.status(404).json({ error: 'Customer not found' });
         }
-        res.json({ message: 'Company deactivated successfully' });
+        res.json({ message: 'Customer deactivated successfully' });
     } catch (err) {
-        console.error(`Error deactivating company with ID ${id}:`, err.message);
+        console.error(`Error deactivating customer with ID ${id}:`, err.message);
         next(err);
     }
 });

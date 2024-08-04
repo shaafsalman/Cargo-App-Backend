@@ -9,8 +9,8 @@ const AccountEmailSender = async (email,name,password,role) => {
             port: 465, 
             secure: true, 
             auth: {
-                user: 'daalloairlines@daallocargo.com', 
-                pass: 'trEWY(racO4B' 
+                user: 'admin@daallocargo.com', 
+                pass: 'Afnan@2024' 
             }
         });
 

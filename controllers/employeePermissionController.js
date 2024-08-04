@@ -14,24 +14,27 @@ connectToDatabase()
         console.error('Unable to connect to the database:', err);
     });
 
-exports.getAllEmployees = async (req, res) => {
+exports.getEmployeeById = async (id) => {
     try {
-        const employees = await employeeModel.getAllEmployees();
-
-        if (!employees || employees.length === 0) {
-            return res.status(404).json({ error: 'No employees found' });
-        }
-
-        res.json(employees);
-    } catch (err) {
-        console.error('Error fetching all employees:', err);
-
-        if (err instanceof TypeError) {
-            return res.status(400).json({ error: 'Invalid data received' });
-        } else if (err.name === 'DatabaseError') {
-            return res.status(500).json({ error: 'Database error: ' + err.message });
-        }
-
-        res.status(500).json({ error: 'Error fetching employees: ' + err.message });
+        const employees = await employeeModel.getEmployeeById(id);
+        return employees;
+        
+    }
+     catch (err) 
+    {
+        console.error('Error in function:', err.message);
+        throw new Error(err.message);
     }
 };
+exports.getAllEmployees = async (req, res) => {
+        try {
+            const employees = await employeeModel.getAllEmployees();
+    
+            if (!employees || employees.length === 0) {
+                return res.status(404).json({ error: 'No employees found' });
+            }
+            res.json(employees);
+        } catch (err) {
+            console.error('Error fetching all employees:', err);
+        }
+    };

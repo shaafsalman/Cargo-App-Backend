@@ -10,7 +10,7 @@ class RegionModel {
             const pool = await this.db;
             const request = pool.request();
             const query = `
-                SELECT regionid, regionname, regioncode
+                SELECT regionid, regionname, regioncode, tax, charges, taxCurrency
                 FROM region
             `;
             const result = await request.query(query);
@@ -35,22 +35,17 @@ class RegionModel {
     }
 
     async createRegion(regionData) {
-        const { regionname, regioncode,tax, charges, taxCurrency } = regionData;
+        const { name, code } = regionData;
         try {
-            let intTax=+tax;
-            let intCharges=+charges;
             const pool = await this.db;
             const request = pool.request();
-            request.input('name', sql.NVarChar, regionname);
-            request.input('code', sql.NVarChar, regioncode);
-            request.input('tax', sql.Int, intTax);
-            request.input('currency', sql.NVarChar, taxCurrency);
-            request.input('charges', sql.Int, intCharges);
+            request.input('name', sql.NVarChar, name);
+            request.input('code', sql.NVarChar, code);
 
             const query = `
-                INSERT INTO region (regionname, regioncode, tax, charges, taxCurrency)
+                INSERT INTO region (name, code)
                 OUTPUT INSERTED.RegionID
-                VALUES (@name, @code, @tax, @charges, @currency)
+                VALUES (@name, @code)
             `;
             const result = await request.query(query);
 
@@ -66,23 +61,17 @@ class RegionModel {
     }
 
     async updateRegion(regionId, regionData) {
-        const {  regionname, regioncode,tax, charges, taxCurrency } = regionData;
+        const { name, code } = regionData;
         try {
-            let intTax=+tax;
-            let intCharges=+charges;
             const pool = await this.db;
             const request = pool.request();
             request.input('regionId', sql.Int, regionId);
-            request.input('name', sql.NVarChar, regionname);
-            request.input('code', sql.NVarChar, regioncode);
-            request.input('tax', sql.Int, intTax);
-            request.input('charges', sql.Int, intCharges);
-            request.input('currency', sql.NVarChar, taxCurrency);
+            request.input('name', sql.NVarChar, name);
+            request.input('code', sql.NVarChar, code);
 
             const query = `
                 UPDATE region
-                SET regionname = @name, regioncode = @code, tax=@tax, charges=@charges,
-                taxCurrency=@currency
+                SET name = @name, code = @code
                 WHERE RegionID = @regionId
             `;
             await request.query(query);
@@ -94,8 +83,6 @@ class RegionModel {
 
     async deleteRegion(regionId) {
         try {
-        console.log("in model");
-
             const pool = await this.db;
             const request = pool.request();
             request.input('regionId', sql.Int, regionId);

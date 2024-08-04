@@ -248,3 +248,26 @@ exports.getAllAllocations = async () => {
         return { success: false, message: 'Database error: ' + err.message };
     }
 };
+
+
+exports.updateBookings = async (req, res) => {
+    const { bookings } = req.body;
+  
+    if (!Array.isArray(bookings) || bookings.length === 0) {
+      return res.status(400).json({ success: false, message: 'No data provided' });
+    }
+  
+    try {
+      const allotmentModel = new AllotmentModel(); // Initialize with appropriate DB connection
+      const success = await allotmentModel.updateBookings(bookings);
+  
+      if (success) {
+        return res.json({ success: true, message: 'Bookings updated successfully' });
+      } else {
+        return res.status(500).json({ success: false, message: 'Failed to update bookings' });
+      }
+    } catch (error) {
+      console.error('Error updating bookings:', error);
+      return res.status(500).json({ success: false, message: 'Server error' });
+    }
+  };

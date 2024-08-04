@@ -11,15 +11,15 @@ connectToDatabase()
         console.error('Unable to connect to the database:', err);
     });
 
-exports.getAdminCard = async () => {
-    try {
-        // Fetch all the required statistics
-        const [totalFlightsResult, upliftResult, allocatedResult, bookedResult] = await Promise.all([
-            statsModel.getTotalFlights(), // Method to get total flights
-            statsModel.getUplift(),       // Method to get uplift
-            statsModel.getAllocated(),    // Method to get allocated
-            statsModel.getBooked()        // Method to get booked input weight
-        ]);
+    exports.getAdminCard = async (fromDate = null, toDate = null) => {
+        console.log(fromDate,toDate);
+        try {
+            const [totalFlightsResult, upliftResult, allocatedResult, bookedResult] = await Promise.all([
+                statsModel.getTotalFlights(fromDate, toDate), 
+                statsModel.getUplift(fromDate, toDate),       
+                statsModel.getAllocated(fromDate, toDate),    
+                statsModel.getBooked(fromDate, toDate)        
+            ]);
 
         // Check for errors in the results
         if (!totalFlightsResult.success) {
@@ -53,15 +53,10 @@ exports.getAdminCard = async () => {
 
 exports.getTopCustomers = async () => {
     try {
-        // Fetch the top companies based on chargeable weight
         const topCompaniesResult = await statsModel.getTopCompaniesByChargeableWeight();
-
-        // Check for errors in the results
         if (!topCompaniesResult.success) {
             throw new Error(topCompaniesResult.message);
         }
-
-        // Combine results into a single response
         return {
             success: true,
             data: topCompaniesResult.data
@@ -90,5 +85,13 @@ exports.getUpliftByMonth = async () => {
         return { success: false, message: 'Server error: ' + err.message };
     }
 };
-
+exports.getUpliftByRegion = async () => {
+    try {
+        const result = await statsModel.getUpliftByRegion();
+        return result;
+    } catch (err) {
+        console.error('Error in getBookingsByRegion:', err);
+        return { success: false, message: 'Server error: ' + err.message };
+    }
+};
 

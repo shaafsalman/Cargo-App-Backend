@@ -46,4 +46,7 @@ router.get('/all', async (req, res) => {
     res.json(result);
 });
 
+router.post('/update', allotmentController.updateBookings);
+
+
 module.exports = router;

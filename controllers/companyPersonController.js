@@ -31,7 +31,7 @@ exports.getAllCompanyPersons = async (req, res) => {
         const companyPersons = await companyPersonModel.getAllCompanyPersons();
         
         if (!companyPersons || companyPersons.length === 0) {
-            return res.status(404).json({ error: 'No company persons found' });
+            return res.status(404).json({ error: 'No users found' });
         }
         
         res.json(companyPersons);
@@ -44,7 +44,7 @@ exports.getAllCompanyPersons = async (req, res) => {
             return res.status(500).json({ error: 'Database error: ' + err.message });
         }
         
-        res.status(500).json({ error: 'Error fetching company persons: ' + err.message });
+        res.status(500).json({ error: 'Error fetching users: ' + err.message });
     }
 };
 
@@ -97,7 +97,7 @@ exports.deleteCompanyPerson = async (id) => {
     
     } catch (err) {
         console.error('Error in deleteCompanyPerson function:', err.message);
-        res.status(500).json({ error: 'Error deleting company person: ' + err.message });
+        res.status(500).json({ error: 'Error deleting user: ' + err.message });
     }
 };
 
@@ -108,11 +108,11 @@ exports.getCompanyPersonById = async (req, res) => {
         if (companyPerson) {
             res.json(companyPerson);
         } else {
-            res.status(404).json({ error: 'Company person not found' });
+            res.status(404).json({ error: 'User not found' });
         }
     } catch (err) {
         console.error('Error in getCompanyPersonById function:', err.message);
-        res.status(500).json({ error: 'Error fetching company person: ' + err.message });
+        res.status(500).json({ error: 'Error fetching user: ' + err.message });
     }
 };
 
@@ -166,12 +166,12 @@ exports.updateCustomerDetails = async (id, name, email, companyName) => {
     try {
         const success = await companyPersonModel.updateCustomerDetails(id, name, email, companyName);
         if (success) {
-            return { success: true, message: 'Customer details updated successfully' };
+            return { success: true, message: 'User details updated successfully' };
         }
-        return { success: false, message: 'Failed to update customer details' };
+        return { success: false, message: 'Failed to update User details' };
     } catch (err) {
         console.error('Error in updateCustomerDetails function:', err.message);
-        return { success: false, message: 'Error updating customer details' };
+        return { success: false, message: 'Error updating user details' };
     }
 };
 

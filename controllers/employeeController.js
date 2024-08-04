@@ -153,3 +153,56 @@ exports.deactivateEmployee = async (employeeId) => {
         throw err;
     }
 };
+exports.getDetails = async (id) => {
+    try {
+        const result = await employeeModel.getDetails(id);
+
+       if (!result || result.length === 0) {
+        return {}; 
+    }
+
+    return result; 
+    } 
+    catch (err)
+    {
+        console.error('Error in getDetailsModel function:', err.message);
+        return {}; 
+    }
+};
+
+
+exports.updateCustomerDetails = async (id, name, email, companyName) => {
+    try {
+        const success = await employeeModel.updateCustomerDetails(id, name, email, companyName);
+        if (success) {
+            return { success: true, message: 'Customer details updated successfully' };
+        }
+        return { success: false, message: 'Failed to update customer details' };
+    } catch (err) {
+        console.error('Error in updateEmployeeDetails function:', err.message);
+        return { success: false, message: 'Error updating Admin details' };
+    }
+};
+
+exports.changePassword = async (id, oldPassword, newPassword) => {
+    try {
+        const result = await employeeModel.changePassword(id, oldPassword, newPassword);
+        return result;
+    } catch (err) {
+        console.error('Error in changePassword function:', err.message);
+        return { success: false, message: 'Error changing password' };
+    }
+};
+
+exports.getEmployeesRegion = async (employeeId) => {
+    try {
+        const result = await employeeModel.getEmployeesRegion(employeeId);
+        if (!result || result.length === 0) {
+            return { success: false, message: 'No region found for the given employee ID' };
+        }
+        return { success: true, data: result };
+    } catch (err) {
+        console.error('Error in getEmployeesRegion function:', err.message);
+        return { success: false, message: 'Error fetching employee region' };
+    }
+};

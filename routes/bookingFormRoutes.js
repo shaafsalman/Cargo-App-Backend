@@ -52,7 +52,6 @@ router.get('/get-from-to', async (req, res, next) => {
         console.log(`Route: POST /bookings-routeID - Get bookings for routeID: ${routeID}`);
 
         const bookings = await bookingFormController.getBookingsByRouteID(routeID);
-        console.log(bookings);
         if (bookings !== null) {
             res.status(200).json({
                 success: true,
@@ -242,7 +241,6 @@ router.get('/bookings-by-toId', async (req, res, next) => {
 
     try {
         const bookings = await bookingFormController.getBookingByAwb(req);
-        console.log("Bookings: ", bookings.bookings);
 
         if (bookings.success && bookings.bookings.length > 0) {
             res.status(200).json({
@@ -325,7 +323,6 @@ router.post('/shippers', async (req, res, next) => {
         console.log(`Route: POST /shippers - Get all shippers for id: ${createdById}, email: ${userEmail}`);
 
         const shippers = await bookingFormController.getShippersDetails(createdById, userEmail);
-        console.log('Shippers:', shippers);
 
         if (Object.keys(shippers).length > 0) {
             res.status(200).json({
@@ -407,6 +404,48 @@ router.get('/goods-categories', async (req, res, next) => {
     }
 });
 
+
+// POST to add a cargo category
+router.post('/goods-categories', async (req, res, next) => {
+    try {
+        const { code, category } = req.body;
+        const result = await bookingFormController.addCargoCategory(code, category);
+        res.status(201).json({
+            success: true,
+            message: 'Cargo category added successfully',
+            result: result
+        });
+    } catch (err) {
+        console.error('Error adding cargo category:', err.message);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+        next(err);
+    }
+});
+
+// DELETE a cargo category
+router.delete('/goods-categories/:code', async (req, res, next) => {
+    try {
+        const { code } = req.params;
+        const result = await bookingFormController.deleteCargoCategory(code);
+        res.status(200).json({
+            success: true,
+            message: 'Cargo category deleted successfully',
+            result: result
+        });
+    } catch (err) {
+        console.error('Error deleting cargo category:', err.message);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+        next(err);
+    }
+});
+
+
 // GET all special handling codes
 router.get('/special-handling', async (req, res, next) => {
     try {
@@ -434,11 +473,50 @@ router.get('/special-handling', async (req, res, next) => {
     }
 });
 
+// POST to add a special handling code
+router.post('/special-handling', async (req, res, next) => {
+    try {
+        const { code, description } = req.body;
+        const result = await bookingFormController.addSpecialHandlingCode(code, description);
+        res.status(201).json({
+            success: true,
+            message: 'Special handling code added successfully',
+            result: result
+        });
+    } catch (err) {
+        console.error('Error adding special handling code:', err.message);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+        next(err);
+    }
+});
+
+// DELETE a special handling code
+router.delete('/special-handling/:code', async (req, res, next) => {
+    try {
+        const { code } = req.params;
+        const result = await bookingFormController.deleteSpecialHandlingCode(code);
+        res.status(200).json({
+            success: true,
+            message: 'Special handling code deleted successfully',
+            result: result
+        });
+    } catch (err) {
+        console.error('Error deleting special handling code:', err.message);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+        next(err);
+    }
+});
+
 
 // GET all cargo descriptions
 router.get('/dangerous-goods', async (req, res, next) => {
     try {
-        console.log("in routes");
         const dangerousGoods = await bookingFormController.getDangerousGoods();
         // console.log("here",dangerousGoods);
 
@@ -463,7 +541,56 @@ router.get('/dangerous-goods', async (req, res, next) => {
         next(err);
     }
 });
+// POST to add dangerous goods
+router.post('/dangerous-goods', async (req, res, next) => {
+    try {
+        const { code, description } = req.body;
+        const result = await bookingFormController.addDangerousGoods(code, description);
+        res.status(201).json({
+            success: true,
+            message: 'Dangerous goods added successfully',
+            result: result
+        });
+    } catch (err) {
+        console.error('Error adding dangerous goods:', err.message);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+        next(err);
+    }
+});
 
+// DELETE dangerous goods
+router.delete('/dangerous-goods/:code', async (req, res, next) => {
+    try {
+        const { code } = req.params;
+        const result = await bookingFormController.deleteDangerousGoods(code);
+        res.status(200).json({
+            success: true,
+            message: 'Dangerous goods deleted successfully',
+            result: result
+        });
+    } catch (err) {
+        console.error('Error deleting dangerous goods:', err.message);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+        next(err);
+    }
+});
+
+router.post('/add-master-awb', async (req, res, next) => {
+    console.log("request",req)
+    try {
+        console.log("Route: POST /add-master-awb - Add master AWB");
+        await bookingFormController.addMasterAwb(req, res, next);
+    } catch (err) {
+        console.error('Error in bookingFormRoutes:', err.message);
+        next(err);
+    }
+});
 
 
 

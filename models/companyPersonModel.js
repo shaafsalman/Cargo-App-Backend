@@ -54,9 +54,15 @@ class CompanyPersonModel {
           request.input('email', sql.NVarChar, email);
             const checkEmailQuery = 'SELECT COUNT(*) as count FROM companyPerson WHERE email = @email';
             const checkEmailResult = await request.query(checkEmailQuery);
+            const checkAdmin = 'SELECT COUNT(*) as count FROM admin WHERE email = @email';
+            const checkAdminResult = await request.query(checkAdmin);
+            const checkEmployee = 'SELECT COUNT(*) as count FROM employee WHERE email = @email';
+            const checkEmployeeResult = await request.query(checkEmployee);
+            const checkCompany = 'SELECT COUNT(*) as count FROM company WHERE email = @email';
+            const checkCompanyResult = await request.query(checkCompany);
     
-            if (checkEmailResult.recordset[0].count > 0) {
-                throw new Error('Error creating CompanyPerson: Email already exists');
+            if (checkEmailResult.recordset[0].count > 0 || checkAdminResult.recordset[0].count > 0 || checkEmployeeResult.recordset[0].count > 0 || checkCompanyResult.recordset[0].count > 0) {
+                throw new Error('Error creating companyPerson: Email already exists');
             }
       
           // Input parameters for the SQL query
@@ -113,8 +119,14 @@ class CompanyPersonModel {
             request.input('email', sql.NVarChar, email);
             const checkEmailQuery = 'SELECT COUNT(*) as count FROM companyPerson WHERE email = @email AND personId != @personId';
             const checkEmailResult = await request.query(checkEmailQuery);
+            const checkAdmin = 'SELECT COUNT(*) as count FROM admin WHERE email = @email';
+            const checkAdminResult = await request.query(checkAdmin);
+            const checkEmployee = 'SELECT COUNT(*) as count FROM employee WHERE email = @email';
+            const checkEmployeeResult = await request.query(checkEmployee);
+            const checkCompany = 'SELECT COUNT(*) as count FROM company WHERE email = @email';
+            const checkCompanyResult = await request.query(checkCompany);
     
-            if (checkEmailResult.recordset[0].count > 0) {
+            if (checkEmailResult.recordset[0].count > 0 || checkAdminResult.recordset[0].count > 0 || checkEmployeeResult.recordset[0].count > 0 || checkCompanyResult.recordset[0].count > 0) {
                 throw new Error('Error updating companyPerson: Email already exists');
             }
 
@@ -238,27 +250,10 @@ class CompanyPersonModel {
             const request = pool.request();
             request.input('email', sql.NVarChar, email);
             const query = 'SELECT * FROM companyPerson WHERE email = @email';
-            const result = await request.query(query);
-    
-            console.log('Query Result:', result);
-    
-            if (result.recordset.length === 0) {
-                throw new Error('No company person found with the provided email.');
-            }
-    
+            const result = await request.query(query);    
             return result.recordset[0];
         } 
         catch (err) {
-            if (err instanceof sql.RequestError) {
-                console.error('Request error:', err.message);
-            } else if (err instanceof sql.ConnectionError) {
-                console.error('Connection error:', err.message);
-            } else if (err instanceof sql.PreparedStatementError) {
-                console.error('Prepared statement error:', err.message);
-            } else {
-                console.error('Unexpected error:', err.message);
-            }
-    
             throw new Error('Error fetching company person by email: ' + err.message);
         }
     }
@@ -305,7 +300,7 @@ class CompanyPersonModel {
                     cp.name AS name,
                     cp.email AS email,
                     cp.password AS password,
-                    c.CompanyID,
+                    c.CompanyID AS companyId,
                     c.Name AS companyName,
                     c.GroupID
                 FROM 

@@ -1,6 +1,5 @@
 const BookingFormModel = require('../models/bookingFormModel');
 const { connectToDatabase } = require('../db');
-const StatusEmailSender = require('../Utility/StatusEmailSender'); 
 const { Worker } = require('worker_threads');
 let bookingFormModel;
 const path = require('path');
@@ -46,6 +45,7 @@ exports.getAllBookings = async (req, res) => {
 exports.createBooking = async (bookingData) => {
     try {
         // console.log(bookingData);
+        console.log("Creating Booking");
 
         // Extract shipper data
         const shipperData = {
@@ -143,8 +143,10 @@ exports.createBooking = async (bookingData) => {
         // }
     // ];
     
-    const notificationData2 = [
+    console.log("sending notification");
+    const notificationData = [
         {
+            bookingDetails: bookingDetails,
             email: bookingDetails.shipperEmail,
             name: bookingDetails.shipperName,
             awb: bookingDetails.awb,
@@ -159,7 +161,7 @@ exports.createBooking = async (bookingData) => {
     ];
 
     // Prepare notification data based on booking details
-        notificationData2.forEach(sendNotifications);
+        notificationData.forEach(sendNotifications);
         // notificationData.forEach(sendNotifications);
 
 
@@ -193,7 +195,6 @@ exports.getBookingsByToId = async (toId) => {
     }
 };
 exports.updateBookingStatusToDelivered = async (awb) => {
-  console.log('Updating bookings controller');
     try {
         const result = await bookingFormModel.updateBookingStatusToDelivered(awb);
         return({ success: result });
@@ -363,6 +364,29 @@ exports.getAllCargoCategories = async () => {
     }
 };
 
+// Function to add a cargo category
+exports.addCargoCategory = async (code, category) => {
+    try {
+        const result = await bookingFormModel.addCargoCategory(code, category);
+        return result;
+    } catch (err) {
+        console.error('Error adding cargo category:', err);
+        throw new Error('Error adding cargo category: ' + err.message);
+    }
+};
+
+// Function to delete a cargo category
+exports.deleteCargoCategory = async (code) => {
+    try {
+        const result = await bookingFormModel.deleteCargoCategory(code);
+        return result;
+    } catch (err) {
+        console.error('Error deleting cargo category:', err);
+        throw new Error('Error deleting cargo category: ' + err.message);
+    }
+};
+
+
 // Function to fetch all special handling codes
 exports.getAllSpecialHandlingCodes = async () => {
     try {
@@ -378,6 +402,28 @@ exports.getAllSpecialHandlingCodes = async () => {
         throw new Error('Error fetching all special handling codes: ' + err.message);
     }
 };
+// Function to add a special handling code
+exports.addSpecialHandlingCode = async (code, description) => {
+    try {
+        const result = await bookingFormModel.addSpecialHandlingCode(code, description);
+        return result;
+    } catch (err) {
+        console.error('Error adding special handling code:', err);
+        throw new Error('Error adding special handling code: ' + err.message);
+    }
+};
+
+// Function to delete a special handling code
+exports.deleteSpecialHandlingCode = async (code) => {
+    try {
+        const result = await bookingFormModel.deleteSpecialHandlingCode(code);
+        return result;
+    } catch (err) {
+        console.error('Error deleting special handling code:', err);
+        throw new Error('Error deleting special handling code: ' + err.message);
+    }
+};
+
 
 // Function to fetch all cargo descriptions
 exports.getDangerousGoods = async () => {
@@ -395,5 +441,43 @@ exports.getDangerousGoods = async () => {
     } catch (err) {
         console.error('Error fetching all Dangerous Goods:', err);
         throw new Error('Error fetching all Dangerous Goods: ' + err.message);
+    }
+};
+// Function to add dangerous goods
+exports.addDangerousGoods = async (code, description) => {
+    try {
+        const result = await bookingFormModel.addDangerousGoods(code, description);
+        return result;
+    } catch (err) {
+        console.error('Error adding dangerous goods:', err);
+        throw new Error('Error adding dangerous goods: ' + err.message);
+    }
+};
+
+// Function to delete dangerous goods
+exports.deleteDangerousGoods = async (code) => {
+    try {
+        const result = await bookingFormModel.deleteDangerousGoods(code);
+        return result;
+    } catch (err) {
+        console.error('Error deleting dangerous goods:', err);
+        throw new Error('Error deleting dangerous goods: ' + err.message);
+    }
+};
+
+exports.addMasterAwb = async (req, res, next) => {
+    const { masterAwb, awbs } = req.body;
+
+    if (!masterAwb || !Array.isArray(awbs) || awbs.length === 0) {
+        return res.status(400).json({ error: 'Invalid input' });
+    }
+
+    try {
+        const result = await bookingFormModel.addMasterAwb(masterAwb, awbs);
+        if (result.success) {
+            return res.status(201).json({ message: 'Master AWB added successfully' });
+        }
+    } catch (err) {
+        next(err);
     }
 };

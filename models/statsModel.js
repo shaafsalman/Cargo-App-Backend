@@ -5,15 +5,23 @@ class StatsModel {
         this.db = db;
     }
 
-    async getTotalFlights() {
+    async getTotalFlights(fromDate = null, toDate = null) {
         try {
             const pool = await this.db;
             const request = pool.request();
-            const query = `
+
+            let query = `
                 SELECT COUNT(*) AS totalFlights
                 FROM schedule
-                WHERE status IN ('Departed', 'Arrived');
+                WHERE status IN ('Departed', 'Arrived')
             `;
+
+            if (fromDate && toDate) {
+                query += " AND Date BETWEEN @fromDate AND @toDate";
+                request.input('fromDate', fromDate);
+                request.input('toDate', toDate);
+            }
+
             const result = await request.query(query);
             return { success: true, data: result.recordset[0].totalFlights };
         } catch (err) {
@@ -22,17 +30,24 @@ class StatsModel {
         }
     }
 
-
-    async getUplift() {
+    async getUplift(fromDate = null, toDate = null) {
         try {
             const pool = await this.db;
             const request = pool.request();
-            const query = `
+
+            let query = `
                 SELECT 
                     ISNULL(SUM(totalInputWeight), 0) AS totalUplift
                 FROM booking
-                WHERE status IN ('Departed', 'Arrived');
+                WHERE status IN ('Departed', 'Arrived')
             `;
+
+            if (fromDate && toDate) {
+                query += " AND created_at BETWEEN @fromDate AND @toDate";
+                request.input('fromDate', fromDate);
+                request.input('toDate', toDate);
+            }
+
             const result = await request.query(query);
             return { success: true, data: result.recordset[0].totalUplift };
         } catch (err) {
@@ -41,16 +56,24 @@ class StatsModel {
         }
     }
 
-    async getAllocated() {
+    async getAllocated(fromDate = null, toDate = null) {
         try {
             const pool = await this.db;
             const request = pool.request();
-            const query = `
+
+            let query = `
                 SELECT 
                     ISNULL(SUM(finalWeight), 0) AS totalAllocated
                 FROM booking
-                WHERE status = 'Allocated';
+                WHERE status = 'Allocated'
             `;
+
+            if (fromDate && toDate) {
+                query += " AND created_at BETWEEN @fromDate AND @toDate";
+                request.input('fromDate', fromDate);
+                request.input('toDate', toDate);
+            }
+
             const result = await request.query(query);
             return { success: true, data: result.recordset[0].totalAllocated };
         } catch (err) {
@@ -59,16 +82,24 @@ class StatsModel {
         }
     }
 
-    async getBooked() {
+    async getBooked(fromDate = null, toDate = null) {
         try {
             const pool = await this.db;
             const request = pool.request();
-            const query = `
+
+            let query = `
                 SELECT 
                     ISNULL(SUM(totalInputWeight), 0) AS totalBooked
                     FROM booking
-                    WHERE status IN ('Unallocated', 'Allocated');
+                    WHERE status IN ('Unallocated', 'Allocated')
             `;
+
+            if (fromDate && toDate) {
+                query += " AND created_at BETWEEN @fromDate AND @toDate";
+                request.input('fromDate', fromDate);
+                request.input('toDate', toDate);
+            }
+
             const result = await request.query(query);
             return { success: true, data: result.recordset[0].totalBooked };
         } catch (err) {
@@ -76,6 +107,10 @@ class StatsModel {
             return { success: false, message: 'Database error: ' + err.message };
         }
     }
+
+
+
+
     async getTopCompaniesByChargeableWeight() {
         try {
             const pool = await this.db;
@@ -161,7 +196,9 @@ class StatsModel {
             return { success: false, message: 'Database error: ' + err.message };
         }
     }
-    async getUpliftByMonth() {
+
+    
+    async getUpliftByRegions() {
         try {
             const pool = await this.db;
             const request = pool.request();
@@ -187,10 +224,43 @@ class StatsModel {
             return { success: false, message: 'Database error: ' + err.message };
         }
     }
+    async getUpliftByMonth() {
+        try {
+            const pool = await this.db;
+            const request = pool.request();
+            
+            // SQL query to get total uplift cargo for each month
+            const query = `
+                SELECT 
+                    DATEPART(YEAR, b.created_at) AS year,
+                    DATEPART(MONTH, b.created_at) AS month,
+                    ISNULL(SUM(b.finalWeight), 0) AS totalFinalWeight
+                FROM booking b
+                WHERE b.status IN ('Departed', 'Arrived')
+                GROUP BY DATEPART(YEAR, b.created_at), DATEPART(MONTH, b.created_at)
+                ORDER BY DATEPART(YEAR, b.created_at), DATEPART(MONTH, b.created_at);
+            `;
+            
+            const result = await request.query(query);
+            const months = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
     
+            const data = result.recordset.map(record => ({
+                year: record.year,
+                month: months[record.month - 1], // Convert month number to month name
+                totalFinalWeight: record.totalFinalWeight
+            }));
     
+            return { success: true, data: data };
+        } catch (err) {
+            console.error('Error in getUpliftByMonth:', err);
+            return { success: false, message: 'Database error: ' + err.message };
+        }
+    }
     
-    
+
     
 }    
 

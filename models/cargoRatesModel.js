@@ -47,7 +47,6 @@ class CargoRatesModel {
         try {
             const pool = await this.db; // Assuming this.db is your database connection pool
             const request = pool.request();
-            // console.log("companyPersonID", companyPersonID);
     
             // Get CompanyID associated with companyPersonID
             const companyQuery = `
@@ -64,16 +63,15 @@ class CargoRatesModel {
             }
     
             const companyID = companyResult.recordset[0].companyID;
-            // console.log("company ID", companyID);
     
-            // Query to fetch cargo rates
+            // Query to fetch cargo rates and charges from the region table
             let query = `
                 SELECT cr.CargoRateID, cr.code, cr.currency, cr.rate,
-                       cr.validfrom, cr.validtill, cr.applyto, cr.created_at, cr.updated_at,
                        rc.fromRegionID AS FromID, rc.toRegionID AS ToID,
                        rFrom.RegionCode AS FromCode, rTo.RegionCode AS ToCode,
                        rFrom.tax AS FromTax, rFrom.taxCurrency AS FromTaxCurrency,
-                       rTo.tax AS ToTax, rTo.taxCurrency AS ToTaxCurrency
+                       rTo.tax AS ToTax, rTo.taxCurrency AS ToTaxCurrency,
+                       rFrom.charges AS FromCharges, rTo.charges AS ToCharges
                 FROM cargorates cr
                 INNER JOIN regionConnection rc ON cr.connectionid = rc.connectionid
                 INNER JOIN region rFrom ON rc.fromRegionID = rFrom.RegionID
@@ -92,6 +90,8 @@ class CargoRatesModel {
                 code: rate.code,
                 currency: rate.currency,
                 rate: rate.rate,
+                fromCharges: rate.FromCharges,  
+                toCharges: rate.ToCharges,      
                 validFrom: rate.validfrom,
                 validTill: rate.validtill,
                 applyTo: rate.applyto,
@@ -103,8 +103,6 @@ class CargoRatesModel {
                 toTax: rate.ToTax,
                 toTaxCurrency: rate.ToTaxCurrency
             }));
-    
-            // console.log("Cargo rates for company person and connection:", cargoRates);
     
             return cargoRates;
         } catch (err) {
@@ -297,8 +295,6 @@ class CargoRatesModel {
         }
     }
     
-    
-    
 
     async deleteCargoRate(rateId) {
         try {
@@ -306,16 +302,16 @@ class CargoRatesModel {
             const request = pool.request();
             request.input('rateId', sql.BigInt, rateId);
 
-            const query = 'DELETE FROM cargorates WHERE CargoRateID = @rateId';
-            const result = await request.query(query);
-            if (result.rowsAffected[0] > 0) {
+
                 await pool.request()
                     .input('CargoRateID', sql.BigInt, rateId)
                     .query('DELETE FROM cargorate_company WHERE CargoRateID = @CargoRateID');
-                return true;
-            } else {
-                throw new Error('Error deleting cargo rate: No records deleted');
-            }
+                
+                    const query = 'DELETE FROM cargorates WHERE CargoRateID = @rateId';
+                    const result = await request.query(query);
+                
+                    return result.rowsAffected[0] > 0;
+            
         } catch (err) {
             console.error('Error deleting cargo rate:', err.message);
             throw new Error('Error deleting cargo rate: ' + err.message);

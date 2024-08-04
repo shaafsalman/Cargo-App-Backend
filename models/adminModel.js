@@ -47,8 +47,14 @@ class AdminModel {
             request.input('email', sql.NVarChar, email);
             const checkEmailQuery = 'SELECT COUNT(*) as count FROM admin WHERE email = @email';
             const checkEmailResult = await request.query(checkEmailQuery);
+            const checkEmployee = 'SELECT COUNT(*) as count FROM employee WHERE email = @email';
+            const checkEmployeeResult = await request.query(checkEmployee);
+            const checkCompanyPerson = 'SELECT COUNT(*) as count FROM companyPerson WHERE email = @email';
+            const checkCompanyPersonResult = await request.query(checkCompanyPerson);
+            const checkCompany = 'SELECT COUNT(*) as count FROM company WHERE email = @email';
+            const checkCompanyResult = await request.query(checkCompany);
     
-            if (checkEmailResult.recordset[0].count > 0) {
+            if (checkEmailResult.recordset[0].count > 0 || checkEmployeeResult.recordset[0].count > 0 || checkCompanyPersonResult.recordset[0].count > 0 || checkCompanyResult.recordset[0].count > 0) {
                 throw new Error('Error creating admin: Email already exists');
             }
     
@@ -100,9 +106,15 @@ class AdminModel {
             request.input('email', sql.NVarChar, email);
             const checkEmailQuery = 'SELECT COUNT(*) as count FROM admin WHERE email = @email AND AdminID != @adminId';
             const checkEmailResult = await request.query(checkEmailQuery);
+            const checkEmployee = 'SELECT COUNT(*) as count FROM employee WHERE email = @email';
+            const checkEmployeeResult = await request.query(checkEmployee);
+            const checkCompanyPerson = 'SELECT COUNT(*) as count FROM companyPerson WHERE email = @email';
+            const checkCompanyPersonResult = await request.query(checkCompanyPerson);
+            const checkCompany = 'SELECT COUNT(*) as count FROM company WHERE email = @email';
+            const checkCompanyResult = await request.query(checkCompany);
     
-            if (checkEmailResult.recordset[0].count > 0) {
-                throw new Error('Error updating admin: Email already exists');
+            if (checkEmailResult.recordset[0].count > 0 || checkEmployeeResult.recordset[0].count > 0 || checkCompanyPersonResult.recordset[0].count > 0 || checkCompanyResult.recordset[0].count > 0) {
+                throw new Error('Error creating admin: Email already exists');
             }
             
             // Add input parameters for the query

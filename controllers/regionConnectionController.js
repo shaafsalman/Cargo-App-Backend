@@ -32,3 +32,43 @@ exports.getAllConnections = async (req, res) => {
         res.status(500).json({ error: 'Error fetching connections: ' + err.message });
     }
 };
+
+exports.addConnection = async (regionData) => {
+    const { fromRegionId, toRegionId, distance } = regionData;
+
+
+    try {
+        // Hash the distance (if necessary, though this is not typical for distance)
+        // const hashedDistance = await bcrypt.hash(distance.toString(), saltRounds);
+
+        // Create new connection object
+        const newConnection = {
+            fromRegionId,
+            toRegionId,
+            distance // use hashed distance if necessary
+        };
+
+        // Save new connection to the database
+        const result = await connectionModel.addConnection(newConnection);
+
+        return { success: true, message: 'connection created successfully.' };
+    } catch (err) {
+        console.error('Error adding connection:', err);
+        
+        return { success: false, message: 'connection not created successfully.' };
+    }
+};
+
+exports.deleteConnection = async (id) => {
+    try {
+        console.log("in controller");
+        const result = await connectionModel.deleteConnection(id);
+        if (!result) {
+            return { success: false, message: 'Route not found' }; // No `err.message` here
+        }
+        return { success: true, message: 'Route deleted successfully' }; // No `err.message` here
+    } catch (err) {
+        console.error('Error in deleteRoute function:', err.message);
+        return { success: false, message: 'Error deleting Route: ' + err.message };
+    }
+};

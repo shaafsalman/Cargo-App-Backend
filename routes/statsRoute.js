@@ -6,12 +6,14 @@ const router = express.Router();
 // GET all schedules
 router.get('/admin-cards', async (req, res, next) => {
     try {
-        const result = await statsController.getAdminCard();
+        const { fromDate, toDate } = req.query;
+        const result = await statsController.getAdminCard(fromDate, toDate);
         res.json(result);
     } catch (err) {
-        next(err); // Pass errors to the error handling middleware
+        next(err); 
     }
 });
+
 
 router.get('/bookings-by-region', async (req, res) => {
     const result = await statsController.getBookingsByRegion();
@@ -29,6 +31,16 @@ router.get('/uplift-by-month', async (req, res) => {
         res.status(500).json({ success: false, message: result.message });
     }
 });
+
+router.get('/uplift-by-region', async (req, res) => {
+    const result = await statsController.getUpliftByRegion();
+    if (result.success) {
+        res.status(200).json({ success: true, data: result.data });
+    } else {
+        res.status(500).json({ success: false, message: result.message });
+    }
+});
+
 
 router.get('/top-customers', async (req, res, next) => {
     try {

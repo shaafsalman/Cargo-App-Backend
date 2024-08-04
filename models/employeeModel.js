@@ -52,6 +52,21 @@ class EmployeeModel {
             let scheduleTemp = permissions.includes("Allow to manage schedule") ? 1 : 0;
             let aircraftTemp = permissions.includes("Allow to manage aircraft") ? 1 : 0;
             let bookingTemp = permissions.includes("Allow to manage booking") ? 1 : 0;
+            let allocationTemp = permissions.includes("Allow to manage allocation") ? 1 : 0;
+            let departureTemp = permissions.includes("Allow to manage departure") ? 1 : 0;
+            let arrivalTemp = permissions.includes("Allow to manage arrival") ? 1 : 0;
+            let deliveryTemp = permissions.includes("Allow to manage delivery") ? 1 : 0;
+            let manifestTemp = permissions.includes("Allow to manage flight Manifest") ? 1 : 0;
+            let bookingReportTemp = permissions.includes("Allow to manage booking Report") ? 1 : 0;
+            let customerReportTemp = permissions.includes("Allow to manage customer Report") ? 1 : 0;
+            let flightPerformanceTemp = permissions.includes("Allow to manage flight Performance") ? 1 : 0;
+            let awbPrintingTemp = permissions.includes("Allow to manage awb Printing") ? 1 : 0;
+            let labelPrintingTemp = permissions.includes("Allow to manage label Printing") ? 1 : 0;
+            let dashboardTemp = permissions.includes("Allow to see dashboard") ? 1 : 0;
+            let financeTemp = permissions.includes("Allow to manage finance Report") ? 1 : 0;
+            let logTemp = permissions.includes("Allow to manage logs Report") ? 1 : 0;
+
+            
     
             const pool = await this.db;
             const request = pool.request();
@@ -64,6 +79,20 @@ class EmployeeModel {
             request.input('manageSchedule', sql.Int, scheduleTemp);
             request.input('manageAircraft', sql.Int, aircraftTemp);
             request.input('manageBooking', sql.Int, bookingTemp);
+            request.input('manageAllocation', sql.Int, allocationTemp);
+            request.input('manageDeparture', sql.Int, departureTemp);
+            request.input('manageArrival', sql.Int, arrivalTemp);
+            request.input('manageDelivery', sql.Int, deliveryTemp);
+            request.input('manageManifest', sql.Int, manifestTemp);
+            request.input('manageBR', sql.Int, bookingReportTemp);
+            request.input('manageCR', sql.Int, customerReportTemp);
+            request.input('managePerformance', sql.Int, flightPerformanceTemp);
+            request.input('manageAWBPrinting', sql.Int, awbPrintingTemp);
+            request.input('manageLabelPrinting', sql.Int, labelPrintingTemp);
+            request.input('manageDashboard', sql.Int, dashboardTemp);
+            request.input('manageFinance', sql.Int, financeTemp);
+            request.input('manageLog', sql.Int, logTemp);
+
     
             const query = `
                 UPDATE employeePermission
@@ -74,7 +103,20 @@ class EmployeeModel {
                     manageCargo = @manageCargo,
                     manageSchedule = @manageSchedule,
                     manageAircraft = @manageAircraft,
-                    manageBooking = @manageBooking
+                    manageBooking = @manageBooking,
+                    manageAllocation = @manageAllocation,
+                    manageDeparture=@manageDeparture,
+                    manageArrival=@manageArrival,
+                    manageDelivery=@manageDelivery,
+                     manageManifest=@manageManifest,
+                     manageBR=@manageBR,
+                    manageCR=@manageCR,
+                    managePerformance=@managePerformance,
+                    manageAWBPrinting=@manageAWBPrinting,
+                     manageLabelPrinting=@manageLabelPrinting ,
+                     manageDashboard=@manageDashboard,
+                     manageFinance=@manageFinance,
+                     manageLog=@manageLog
                 WHERE employee_id = @employeeid
             `;
     
@@ -111,8 +153,14 @@ class EmployeeModel {
             request.input('email', sql.NVarChar, email);
             const checkEmailQuery = 'SELECT COUNT(*) as count FROM employee WHERE email = @email';
             const checkEmailResult = await request.query(checkEmailQuery);
+            const checkAdmin = 'SELECT COUNT(*) as count FROM admin WHERE email = @email';
+            const checkAdminResult = await request.query(checkAdmin);
+            const checkCompanyPerson = 'SELECT COUNT(*) as count FROM companyPerson WHERE email = @email';
+            const checkCompanyPersonResult = await request.query(checkCompanyPerson);
+            const checkCompany = 'SELECT COUNT(*) as count FROM company WHERE email = @email';
+            const checkCompanyResult = await request.query(checkCompany);
     
-            if (checkEmailResult.recordset[0].count > 0) {
+            if (checkEmailResult.recordset[0].count > 0 || checkAdminResult.recordset[0].count > 0 || checkCompanyPersonResult.recordset[0].count > 0 || checkCompanyResult.recordset[0].count > 0) {
                 throw new Error('Error creating employee: Email already exists');
             }
             
@@ -165,6 +213,20 @@ class EmployeeModel {
             let scheduleTemp = permissions.includes("Allow to manage schedule") ? 1 : 0;
             let aircraftTemp = permissions.includes("Allow to manage aircraft") ? 1 : 0;
             let bookingTemp = permissions.includes("Allow to manage booking") ? 1 : 0;
+            let allocationTemp = permissions.includes("Allow to manage allocation") ? 1 : 0;
+            let departureTemp = permissions.includes("Allow to manage departure") ? 1 : 0;
+            let arrivalTemp = permissions.includes("Allow to manage arrival") ? 1 : 0;
+            let deliveryTemp = permissions.includes("Allow to manage delivery") ? 1 : 0;
+            let manifestTemp = permissions.includes("Allow to manage flight Manifest") ? 1 : 0;
+            let bookingReportTemp = permissions.includes("Allow to manage booking Report") ? 1 : 0;
+            let customerReportTemp = permissions.includes("Allow to manage customer Report") ? 1 : 0;
+            let flightPerformanceTemp = permissions.includes("Allow to manage flight Performance") ? 1 : 0;
+            let awbPrintingTemp = permissions.includes("Allow to manage awb Printing") ? 1 : 0;
+            let labelPrintingTemp = permissions.includes("Allow to manage label Printing") ? 1 : 0;
+            let dashboardTemp = permissions.includes("Allow to see dashboard") ? 1 : 0;
+            let financeTemp = permissions.includes("Allow to manage finance Report") ? 1 : 0;
+            let logTemp = permissions.includes("Allow to manage logs Report") ? 1 : 0;
+
     
             const pool = await this.db;
             const request = pool.request();
@@ -177,11 +239,28 @@ class EmployeeModel {
             request.input('manageSchedule', sql.Int, scheduleTemp);
             request.input('manageAircraft', sql.Int, aircraftTemp);
             request.input('manageBooking', sql.Int, bookingTemp);
+            request.input('manageAllocation', sql.Int, allocationTemp);
+            request.input('manageDeparture', sql.Int, departureTemp);
+            request.input('manageArrival', sql.Int, arrivalTemp);
+            request.input('manageDelivery', sql.Int, deliveryTemp);
+            request.input('manageManifest', sql.Int, manifestTemp);
+            request.input('manageBR', sql.Int, bookingReportTemp);
+            request.input('manageCR', sql.Int, customerReportTemp);
+            request.input('managePerformance', sql.Int, flightPerformanceTemp);
+            request.input('manageAWBPrinting', sql.Int, awbPrintingTemp);
+            request.input('manageLabelPrinting', sql.Int, labelPrintingTemp);
+            request.input('manageDashboard', sql.Int, dashboardTemp);
+            request.input('manageFinance', sql.Int, financeTemp);
+            request.input('manageLog', sql.Int, logTemp);
+
+
+
+
             console.log(employeeID);
             const query = `
-                INSERT INTO employeePermission (employee_id, manageEmployee, manageCustomer, manageUser, manageCargo, manageSchedule, manageAircraft, manageBooking)
+                INSERT INTO employeePermission (employee_id, manageEmployee, manageCustomer, manageUser, manageCargo, manageSchedule, manageAircraft, manageBooking, manageAllocation,manageDeparture,manageArrival,manageDelivery, manageManifest,manageBR, manageCR,managePerformance,manageAWBPrinting, manageLabelPrinting,manageDashboard, manageFinance, manageLog )
                 OUTPUT INSERTED.Employee_ID
-                VALUES (@employeeid, @manageEmployee, @manageCustomer, @manageUser, @manageCargo, @manageSchedule, @manageAircraft, @manageBooking)
+                VALUES (@employeeid, @manageEmployee, @manageCustomer, @manageUser, @manageCargo, @manageSchedule, @manageAircraft, @manageBooking ,@manageAllocation, @manageDeparture, @manageArrival, @manageDelivery, @manageManifest, @manageBR, @manageCR, @managePerformance, @manageAWBPrinting, @manageLabelPrinting, @manageDashboard, @manageFinance,@manageLog)
             `;
     
             const result = await request.query(query);
@@ -205,15 +284,21 @@ class EmployeeModel {
             // console.log(region);
             const pool = await this.db;
             const request = pool.request();
-            // const hashedPassword = await bcrypt.hash(password, 10);
+            const hashedPassword = await bcrypt.hash(password, 10);
             let temp = status === true || status === 'active' || status === 'Active' ? 1 : 0;
 
             request.input('employeeId', sql.Int, employeeId);
             request.input('email', sql.NVarChar, email);
             const checkEmailQuery = 'SELECT COUNT(*) as count FROM employee WHERE email = @email AND employeeid != @employeeid';
             const checkEmailResult = await request.query(checkEmailQuery);
+            const checkAdmin = 'SELECT COUNT(*) as count FROM admin WHERE email = @email';
+            const checkAdminResult = await request.query(checkAdmin);
+            const checkCompanyPerson = 'SELECT COUNT(*) as count FROM companyPerson WHERE email = @email';
+            const checkCompanyPersonResult = await request.query(checkCompanyPerson);
+            const checkCompany = 'SELECT COUNT(*) as count FROM company WHERE email = @email';
+            const checkCompanyResult = await request.query(checkCompany);
     
-            if (checkEmailResult.recordset[0].count > 0) {
+            if (checkEmailResult.recordset[0].count > 0 || checkAdminResult.recordset[0].count > 0 || checkCompanyPersonResult.recordset[0].count > 0 || checkCompanyResult.recordset[0].count > 0) {
                 throw new Error('Error updating employee: Email already exists');
             }
 
@@ -221,7 +306,7 @@ class EmployeeModel {
             request.input('name', sql.NVarChar, name);
             // request.input('email', sql.NVarChar, email);
             request.input('RegionID', sql.Int, RegionID);
-            request.input('password', sql.NVarChar, password);
+            request.input('password', sql.NVarChar, hashedPassword);
             request.input('deactive', sql.Int, temp);
             request.input('updated_at', sql.DateTime, new Date());
 
@@ -304,6 +389,134 @@ class EmployeeModel {
             throw new Error('Error fetching employee by email: ' + err.message);
         }
     }
+     
+    async getDetails(id) {
+        // console.log(`Route: POST employee model /profile - Get all Details for id: ${id}`);
+        // console.log('Getting details:', id);
+        try {
+            const pool = await this.db; 
+            const request = pool.request();
+            request.input('EmployeeID', sql.Int, id); 
+    
+            const query = `
+                SELECT 
+                EmployeeID,
+                    name,
+                    email,
+                    password
+                FROM 
+                    employee
+                WHERE 
+                EmployeeID = @EmployeeID
+            `;
+    
+            const result = await request.query(query);
+            // console.log(result);
+            if (result.recordset.length === 0) {
+                throw new Error('Employee not found');
+            }
+    
+            const employeeDetails = result.recordset[0];
+    
+            return employeeDetails;
+        } catch (err) {
+            console.error('Error fetching employee details:', err.message);
+            throw new Error('Error fetching employee details: ' + err.message);
+        }
+    }
+    
+    async changePassword(id, oldPassword, newPassword) {
+        // console.log('Changing password for:', id);
+        try {
+            const pool = await this.db;
+            const request = pool.request();
+            request.input('EmployeeID', sql.Int, id);
+
+            const getPasswordQuery = `
+                SELECT password
+                FROM employee
+                WHERE EmployeeID = @EmployeeID
+            `;
+            const result = await request.query(getPasswordQuery);
+            if (result.recordset.length === 0) {
+                return { success: false, message: 'Employee not found' };
+            }
+            const hashedPassword = result.recordset[0].password;
+
+            // Compare old password with hashed password
+            
+            // if(hashedPassword != oldPassword) 
+            // {
+            //     return { success: false, message: 'Old password is incorrect' };
+
+            // }
+            
+            const passwordMatch = await bcrypt.compare(oldPassword, hashedPassword);
+            if (!passwordMatch) {
+                return { success: false, message: 'Old password is incorrect' };
+            }
+
+            const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
+
+            const updatePasswordQuery = `
+                UPDATE employee
+                SET password = @NewPassword
+                WHERE EmployeeID = @EmployeeID
+            `;
+            request.input('NewPassword', sql.NVarChar, hashedNewPassword);
+            const updateResult = await request.query(updatePasswordQuery);
+
+            // console.log(updateResult);
+            return { success: updateResult.rowsAffected[0] > 0, message: 'Password changed successfully' };
+        } catch (err) {
+            console.error('Error changing password:', err.message);
+            throw new Error('Error changing password: ' + err.message);
+        }
+    }
+    async updateCustomerDetails(id, name, email) {
+        // console.log('Updating admin details:', id);
+        try {
+            const pool = await this.db; 
+            const request = pool.request();
+            request.input('EmployeeID', sql.Int, id);
+            request.input('Name', sql.NVarChar, name);
+            request.input('Email', sql.NVarChar, email);
+    
+            const query = `
+                UPDATE employee
+                SET 
+                    name = @Name
+                WHERE EmployeeID = @EmployeeID
+            `;
+    
+            const result = await request.query(query);
+            // console.log(result);
+            return result.rowsAffected[0] > 0;
+        } catch (err) {
+            console.error('Error updating employee details:', err.message);
+            throw new Error('Error updating employee details: ' + err.message);
+        }
+    }
+    async getEmployeesRegion(employeeId) {
+        try {
+          const pool = await this.db;
+          const request = pool.request();
+          const query = `
+            SELECT e.RegionID, r.RegionName
+            FROM employee e
+            INNER JOIN region r ON e.RegionID = r.RegionID
+            WHERE e.employeeid = @employeeId
+          `;
+          request.input('employeeId', employeeId); // Add the employeeId parameter
+          const result = await request.query(query);
+          return result.recordset;
+        } catch (err) {
+          console.error('Error in getEmployeesRegion:', err);
+          throw new Error('Error fetching employee region: ' + err.message);
+        }
+      }
+      
+
 }
 
 module.exports = EmployeeModel;

@@ -21,6 +21,7 @@ const employeePermissionRoute=require('./routes/employeePermission');
 const regionsConnections=require('./routes/regionConnectionRoute');
 const reportersRoute = require('./routes/reportRoutes'); 
 const statsRoute = require('./routes/statsRoute');
+const regionSettingsRoute = require('./routes/regionsRoute2');
 // Middleware
 const app = express();
 app.use(bodyParser.json());
@@ -37,6 +38,8 @@ app.use('/auth',authRoutes);
 app.use('/book', bookingRoutes);
 app.use('/schedule', schedulesRoute);
 app.use('/regions', regionsRoute);
+app.use('/regions-setting', regionSettingsRoute);
+app.use('/regions-second', regionsRoute);
 app.use('/aircraft', aircraftRoute);
 app.use('/allot', allotmentRoute);
 app.use('/employeePermission', employeePermissionRoute);

@@ -1,4 +1,4 @@
-const RegionModel = require('../models/regionModel.js');
+const RegionModel = require('../models/regionModel2.js');
 const { connectToDatabase } = require('../db');
 
 let regionModel;
@@ -48,55 +48,48 @@ exports.getRegionById = async (req, res) => {
 
 exports.createRegion = async (regionData) => {
     try {
-        const { regionname, regioncode, tax, charges, taxCurrency } = regionData;
-        console.log("in controller:");
-        console.log(regionname, regionname, tax, charges, taxCurrency);
-        
-        // if (!regionname || !code) {
-        //     return { success: false, message: 'Name and code are required.' };
-        // }
+        const { name, code } = regionData;
+
+        if (!name || !code) {
+            return false;
+        }
 
         const newRegionData = {
-            regionname,
-            regioncode,
-            tax,
-            charges,
-            taxCurrency,
+            name,
+            code,
             created_at: new Date(),
             updated_at: new Date()
         };
 
-        await regionModel.createRegion(newRegionData);
-        return { success: true, message: 'Region created successfully.' };
+        return await regionModel.createRegion(newRegionData);
     } catch (err) {
         console.error('Error in createRegion function:', err.message);
-        return { success: false, message: 'Error creating region: ' + err.message };
+        res.status(500).json({ error: 'Error creating region: ' + err.message });
     }
 };
 
-exports.updateRegion = async (id, regionData) => {
-    // const { id } = req.params;
-    // const regionData = req.body;
+exports.updateRegion = async (req, res) => {
+    const { id } = req.params;
+    const regionData = req.body;
     try {
         const updatedRegion = await regionModel.updateRegion(id, regionData);
-        // res.json(updatedRegion);
+        res.json(updatedRegion);
     } catch (err) {
         console.error('Error in updateRegion function:', err.message);
-        return { success: false, message: 'Error updating region: ' + err.message };
+        res.status(500).json({ error: 'Error updating region: ' + err.message });
     }
 };
 
-exports.deleteRegion = async (id) => {
-    // const { id } = req.params;
+exports.deleteRegion = async (req, res) => {
+    const { id } = req.params;
     try {
-        console.log("in controller");
         const result = await regionModel.deleteRegion(id);
         if (!result) {
-            return { success: false, message: 'Region not found ' + err.message };
+            return res.status(404).json({ error: 'Region not found' });
         }
-        return { success: true, message: 'Region deleted successfully' + err.message };
+        res.json({ message: 'Region deleted successfully' });
     } catch (err) {
         console.error('Error in deleteRegion function:', err.message);
-        return { success: false, message: 'Error deleting region ' + err.message };
+        res.status(500).json({ error: 'Error deleting region: ' + err.message });
     }
 };

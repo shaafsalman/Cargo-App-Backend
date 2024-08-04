@@ -245,7 +245,57 @@ class AllotmentModel {
             return false;
         }
     }
-
+    async updateBookings(bookings) {
+        
+        try {
+            const pool = await this.db;
+            const transaction = new sql.Transaction(pool);
+            await transaction.begin();
+            
+            try {
+                // Iterate over bookings and prepare a new request for each booking
+                for (const [index, booking] of bookings.entries()) {
+                    const { awb, amountPaid, balance, remarks } = booking;
+    
+                    // Skip updating if amountPaid is null or undefined
+                    if (amountPaid == null) {
+                        console.warn(`Skipping AWB ${awb} due to null amountPaid`);
+                        continue;
+                    }
+    
+                    // Create a new request for each booking
+                    const request = transaction.request();
+    
+                    // Prepare update query with unique parameter names
+                    const updateQuery = `
+                        UPDATE booking
+                        SET amountPaid = @amountPaid_${index}, balance = @balance_${index}, remarks = @remarks_${index}
+                        WHERE awb = @awb_${index};
+                    `;
+    
+                    request.input(`amountPaid_${index}`, sql.Decimal(10, 2), amountPaid);
+                    request.input(`balance_${index}`, sql.Decimal(10, 2), balance);
+                    request.input(`remarks_${index}`, sql.NVarChar, remarks);
+                    request.input(`awb_${index}`, sql.NVarChar, awb);
+    
+                    await request.query(updateQuery);
+                }
+    
+                // Commit transaction if everything succeeded
+                await transaction.commit();
+                return true;
+            } catch (err) {
+                // Rollback transaction if there's an error
+                await transaction.rollback();
+                throw err;
+            }
+        } catch (err) {
+            throw new Error('Error updating bookings: ' + err.message);
+        }
+    }
+    
+    
+    
  
 
     async getAllocatedBookings(scheduleId) {

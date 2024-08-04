@@ -36,7 +36,6 @@ class ScheduleModel {
 `;
 
             const result = await request.query(query);
-            console.log("model", result);
             return result.recordset;
         } catch (err) {
             console.error('Error in getAllSchedules:', err);
@@ -80,13 +79,11 @@ class ScheduleModel {
                     s.status = 'Processing'
             `;
             
-            console.log('Query:', query); // Log the constructed SQL query
-            console.log('Parameters:', { routeID }); // Log input parameters
+
         
             request.input('connectionID', routeID);
         
             const result = await request.query(query);
-            console.log('Result:', result); // Log the result from the database query
     
             return result.recordset;
         } catch (err) {
@@ -130,12 +127,12 @@ class ScheduleModel {
                 INNER JOIN 
                     aircraft ON s.AircraftID = aircraft.AircraftID
                 WHERE 
-                    rc.toRegionID = @toId
+                    rc.toRegionID = @toId AND
+                    s.status IN ('Departed', 'Arrived', 'Delivered')
+
+                    
             `;
-            
-            console.log('Query:', query); // Log the constructed SQL query
-            console.log('Parameters:', { toId }); // Log input parameters
-        
+ 
             request.input('toId', toId);
         
             const result = await request.query(query);
@@ -191,10 +188,7 @@ class ScheduleModel {
                 WHERE 
                     rc.fromRegionID = @fromId
             `;
-            
-            console.log('Query:', query); // Log the constructed SQL query
-            console.log('Parameters:', { fromId }); // Log input parameters
-        
+   
             request.input('fromId', fromId);
         
             const result = await request.query(query);
@@ -241,18 +235,15 @@ class ScheduleModel {
     }
 
     async createSchedule(scheduleData) {
-        // console.log("Creating schedule in model:", scheduleData);
     
         try {
             const pool = await this.db;
             const request = pool.request();
     
-            // console.log("Creating schedule", scheduleData);
     
             // Format the date to 'YYYY-MM-DD'
             const formattedDate = moment(scheduleData.date, 'YYYY-MM-DD').format('YYYY-MM-DD');
-            // console.log('Arrival Time:', scheduleData.formattedArrTime.toString());
-            // console.log('Departure Time:', scheduleData.formattedDepTime);
+     
             // Prepare input parameters for the query
             request.input('date', sql.Date, formattedDate);
             request.input('connectionid', sql.Int, scheduleData.connectionid);
@@ -268,7 +259,6 @@ class ScheduleModel {
     SELECT SCOPE_IDENTITY() AS insertedId;
 `;
 
-     // console.log('Executing SQL query:', query);
 
             // Execute the query
             const result = await request.query(query);
@@ -282,7 +272,6 @@ class ScheduleModel {
     }
     
     async updateSchedule(scheduleId, scheduleData) {
-        // console.log("successfully in schedule model");
         const { connectionid ,formattedArrTime,formattedDepTime,AircraftID,flightName,date } = scheduleData;
         try {
             const pool = await this.db;
@@ -313,7 +302,6 @@ class ScheduleModel {
 
     async deleteSchedule(scheduleId) {
         try {
-            console.log("in model");
             const pool = await this.db;
             const request = pool.request();
             request.input('scheduleId', sql.BigInt, scheduleId);
